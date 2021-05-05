@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Logs</title>
+    <style>
+        table {
+            font-family: arial, sans-serif;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        td, th {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+
+        tr:nth-child(even) {
+            background-color: #dddddd;
+        }
+    </style>
+</head>
+<body>
+    {#    <button onclick=window.history.back()>Go Back</button>#}
+    <br>
+    <form method="get" action="{% url 'runscript:view_and_upload' pk %} ">
+        <input type="submit" value="back"><br><br>
+    </form>
+    {% if logs %}
+        {% if is_paginated %}
+            {% if page_obj.has_previous %}
+                <span><a href="?page={{ page_obj.previous_page_number }}">Previous</a></span>
+            {% endif %}
+                <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+            {% if page_obj.has_next %}
+                <span><a href="?page={{ page_obj.next_page_number }}">Next</a></span>
+            {% endif %}
+        {% endif %}
+        <table>
+            <tr>
+                <th>Date</th>
+                <th>User</th>
+                <th>Action</th>
+            </tr>
+            {% for log in logs %}
+                <tr>
+                    <td>{{ log.date_added }}</td>
+                    <td>{{ log.person }}</td>
+                    <td>{{ log.action }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        no logs
+    {% endif %}
+</body>
+</html>
