@@ -1,4 +1,4 @@
-# runscript
+# Installation
 git clone https://github.com/ThuyVoV/runscripts.git <br>
 
 You will get a folder runscripts/runscript<br>
@@ -23,3 +23,10 @@ To run the server use:<br>
 python manage.py runserver<br>
 Go to: http://127.0.0.1:8000/runscript/
 
+# Usage
+The app lets a user create script list, and each list contains multiple scripts that can be ran. 
+The creator of the list can add other users to view and manage scripts in the list.
+
+# Disclaimer
+Currently, there are no permission restriction, so anyone added to the script list can upload, edit, or delete any scripts.
+The only restriction they have is that they cannot add other users.
