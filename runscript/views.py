@@ -214,7 +214,7 @@ def script_confirm_delete(request, file_id):
     return render(request, 'runscript/script_confirm_delete.html', context)
 
 
-def logs(request, list_id):
+#def logs(request, list_id):
     script_list = ScriptList.objects.get(pk=list_id)
 
     users = []
