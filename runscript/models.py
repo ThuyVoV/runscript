@@ -35,7 +35,7 @@ class UploadFileModel(models.Model):
     script_list = models.ForeignKey(ScriptList, on_delete=models.CASCADE, null=True)
     script_name = models.CharField(max_length=50, default='')
     date_added = models.DateTimeField(default=timezone.now)
-    upload_file = models.FileField(upload_to='scripts')
+    upload_file = models.FileField(upload_to='runscript/scripts')
 
     def __str__(self):
         return self.script_name
