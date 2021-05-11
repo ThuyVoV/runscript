@@ -1,9 +1,6 @@
 # Installation
 git clone https://github.com/ThuyVoV/runscripts.git <br>
 
-You will get a folder runscripts/runscript<br>
-Move the subfolder "runscript" into your project base directory.
-
 In settings.py add 'runscript.apps.RunscriptConfig' to your INSTALLED_APPS.<br>
 In urls.py add path('runscript/', include('runscript.urls')) <br>
 
