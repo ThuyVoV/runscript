@@ -1,7 +1,5 @@
-from django.http import HttpResponseRedirect
 from django.shortcuts import redirect
-
-from runscript.models import UploadFileModel, ScriptList
+from .view_helper import get_list
 
 
 # if the user is not in the list of user allowed, redirect to their main page
@@ -25,11 +23,3 @@ def permission_check(func):
 
         return func(request, *args, **kwargs)
     return wrapper
-
-
-def get_list(**kwargs):
-    if 'list_id' in kwargs:
-        return ScriptList.objects.get(pk=int(kwargs['list_id']))
-    if 'file_id' in kwargs:
-        script_list_id = UploadFileModel.objects.get(pk=int(kwargs['file_id'])).script_list_id
-        return ScriptList.objects.get(pk=script_list_id)

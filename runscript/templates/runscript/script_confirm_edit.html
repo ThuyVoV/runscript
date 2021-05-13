@@ -2,9 +2,11 @@
 {% block title %} edit script confirmation {% endblock title %}
 {% block confirm %} Are you sure you want to edit this script? {% endblock confirm %}
 {% block edit_yes %}
+    {% if can_edit %}
     <form action="{% url 'runscript:confirm_edit' script_name.id %}" method="POST">
         {% csrf_token %}
         <input type="submit" name="button_edit_yes" value="yes"/>
     </form>
+    {% endif %}
 {% endblock edit_yes %}
 {#{% block edit_yes %}"button_edit_yes"{% endblock edit_yes %}#}

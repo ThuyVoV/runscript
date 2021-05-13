@@ -1,5 +1,5 @@
 from django.conf import settings
-from runscript.models import UploadFileModel
+from runscript.models import UploadFileModel, ScriptList
 
 
 def get_paths(file_id):
@@ -26,3 +26,11 @@ def write_to_file(content, file_path):
         for line in content:
             f.write(line)
     f.close()
+
+
+def get_list(**kwargs):
+    if 'list_id' in kwargs:
+        return ScriptList.objects.get(pk=int(kwargs['list_id']))
+    if 'file_id' in kwargs:
+        script_list_id = UploadFileModel.objects.get(pk=int(kwargs['file_id'])).script_list_id
+        return ScriptList.objects.get(pk=script_list_id)

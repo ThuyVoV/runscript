@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Permission
+from django.contrib.contenttypes.models import ContentType
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.shortcuts import render, redirect
 from django.views.generic.list import ListView
@@ -20,7 +21,6 @@ import shlex
 # create an empty lists that will hold scripts
 @login_required(login_url='/login/')
 def create_list(request):
-
     if request.method == "POST":
         form = CreateScriptListForm(request.POST)
         if form.is_valid():
@@ -31,7 +31,19 @@ def create_list(request):
             sl.save()
             request.user.user_script_list.add(sl)
 
-            # make group owner_groupname
+            # create lists of permissions for this new script list
+            content_type = ContentType.objects.get_for_model(UploadFileModel)
+            perm_attributes = ['view', 'add', 'run', 'edit', 'delete', 'manage', 'log']
+
+            for p in perm_attributes:
+                Permission.objects.get_or_create(
+                    codename=f"{request.user}_{ln}_can_{p}",
+                    name=f"{request.user} {ln} can {p}",
+                    content_type=content_type,
+                )
+                perm = Permission.objects.get(codename=f"{request.user}_{ln}_can_{p}")
+                request.user.user_permissions.add(perm)
+
     else:
         form = CreateScriptListForm()
 
@@ -50,6 +62,10 @@ def view_and_upload(request, list_id):
 
     context = {
         'script_list': script_list,
+        'can_manage': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_manage"),
+        'can_log': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_log"),
+        'can_view': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_view"),
+        'can_add': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_add")
     }
 
     if request.method == 'POST':
@@ -78,7 +94,11 @@ def view_and_upload(request, list_id):
 @access_check
 def manage_user(request, list_id):
     script_list = ScriptList.objects.get(pk=list_id)
-
+    context = {
+        'script_list': script_list,
+        'can_manage': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_manage"),
+        'can_log': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_log"),
+    }
     if request.method == 'POST':
         if request.POST.get("button_add_user"):
             add_user = request.POST.get('add_user_to_list')
@@ -90,20 +110,6 @@ def manage_user(request, list_id):
                     script_list.user.add(User.objects.get(username=add_user).pk)
                     script_log = f'{request.user} added {add_user} to {script_list.list_name}'
                     script_list.scriptlog_set.create(action=script_log, person=request.user)
-
-                    userx = User.objects.get(username=add_user)
-
-
-                    # perm = Permission.objects.get(name='Can add upload file model')
-                    #perm = Permission.objects.get(codename='upload file model')
-                    # userx.user_permissions.remove(perm)
-                    # userx.user_permissions.add(perm)
-                    print(f'A {userx}')
-                    # print(f'B {perm}')
-                    print(f'C {userx.get_all_permissions()}')
-                    print(f"D {userx.has_perm('runscript.can_upload_script')}")
-                    print(f"E {userx.get_user_permissions()}")
-                    #userx.perm
                 else:
                     messages.error(request, "That user does not exist.")
             else:
@@ -123,15 +129,19 @@ def manage_user(request, list_id):
             else:
                 messages.error(request, "you must be the owner of this list")
 
-    return render(request, 'runscript/manage_user.html', {'script_list': script_list})
+    return render(request, 'runscript/manage_user.html', context)
 
 
 @login_required(login_url='/login/')
 @access_check
 def script_detail(request, file_id):
+    script_list = vh.get_list(file_id=file_id)
     output = []
     context = {
         'script_name': UploadFileModel.objects.get(pk=file_id),
+        'can_view': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_view"),
+        'can_run': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_run"),
+        'can_edit': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_edit")
     }
 
     # when they click run script, call the script with argument
@@ -161,13 +171,17 @@ def script_detail(request, file_id):
 @login_required(login_url='/login/')
 @access_check
 def script_change(request, file_id):
-
-
+    script_list = vh.get_list(file_id=file_id)
     context = {
         'script_name': UploadFileModel.objects.get(pk=file_id),
         'filename': UploadFileModel.objects.get(pk=file_id).upload_file.url.split('/')[-1],
-        'fileContent': vh.get_file_content(UploadFileModel.objects.get(pk=file_id).upload_file.path)
+        'fileContent': vh.get_file_content(UploadFileModel.objects.get(pk=file_id).upload_file.path),
+        'can_view': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_view"),
+        'can_edit': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_edit"),
+        'can_delete': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_delete"),
     }
+
+    print(f"THIS IS CAN DELETE {context['can_delete']}")
 
     # if pressing no on edit confirmation return back to change page
     # while keeping the edits
@@ -183,14 +197,13 @@ def script_change(request, file_id):
 @login_required(login_url='/login/')
 @access_check
 def script_confirm_edit(request, file_id):
-
-
     url, file_path = vh.get_paths(file_id)
-
+    script_list = vh.get_list(file_id=file_id)
     context = {
         'url': url,
         'script_name': UploadFileModel.objects.get(pk=file_id),
         'filename': url.split('/')[-1],
+        'can_edit': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_edit"),
     }
     script_list = ScriptList.objects.get(pk=context['script_name'].script_list_id)
     if request.method == 'POST':
@@ -220,11 +233,13 @@ def script_confirm_edit(request, file_id):
 @access_check
 def script_confirm_delete(request, file_id):
     url, file_path = vh.get_paths(file_id)
+    script_list = vh.get_list(file_id=file_id)
     context = {
         'url': url,
         'script_name': UploadFileModel.objects.get(pk=file_id),
         'filename': url.split('/')[-1],
-        'fileContent': vh.get_file_content(file_path)
+        'fileContent': vh.get_file_content(file_path),
+        'can_delete': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_delete"),
     }
 
     script_list = ScriptList.objects.get(pk=context['script_name'].script_list_id)
@@ -282,5 +297,9 @@ class Logs(ListView):
 
         context['logs'] = page
         context['pk'] = self.kwargs['pk']
+
+        script_list = vh.get_list(list_id=self.kwargs['pk'])
+        user = self.request.user
+        context['can_log'] = user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_log")
 
         return context

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>manage user</title>
+</head>
+<body>
+
+    <form action="{% url 'runscript:view_and_upload' script_list.id %}" method="get">
+        <input type="submit" value="back">
+    </form>
+
+    {% if can_manage %}
+        <form action="{% url 'runscript:manage_user' script_list.id %}" method="POST">
+            {% csrf_token %}
+            Add user to this list
+            <input type="text" name="add_user_to_list">
+            <input type="submit" value="Add User" name="button_add_user"/>
+        </form>
+
+        {% if script_list.user.all %}
+            <form action="{% url 'runscript:manage_user' script_list.id %}" method="POST">
+                {% csrf_token %}
+
+                Delete this user:
+
+                <select name="del_user_from_list">
+                    {% for user in script_list.user.all %}
+                        {% if user|slugify != script_list.owner|slugify %}
+                            <option value="{{ user }}">{{ user }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+
+                <input type="submit" value="Delete User" name="button_del_user"/>
+            </form>
+        {% endif %}
+
+        {% for message in messages %}
+            {{ message }}
+        {% endfor %}
+    {% endif %}
+</body>
+</html>

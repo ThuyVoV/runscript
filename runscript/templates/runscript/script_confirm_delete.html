@@ -2,10 +2,12 @@
 {% block title %} delete script confirmation {% endblock title %}
 {% block confirm %} Are you sure you want to delete this script? {% endblock confirm %}
 {% block del_yes %}
-    <form action="{% url 'runscript:confirm_delete' script_name.id %}" method="POST">
-        {% csrf_token %}
-        <input type="submit" name="button_delete_yes" value="yes"/>
-    </form>
+    {% if can_delete %}
+        <form action="{% url 'runscript:confirm_delete' script_name.id %}" method="POST">
+            {% csrf_token %}
+            <input type="submit" name="button_delete_yes" value="yes"/>
+        </form>
+    {% endif %}
 {% endblock del_yes %}
 {#{% block del_yes %}"button_delete_yes"{% endblock del_yes %}#}
 
