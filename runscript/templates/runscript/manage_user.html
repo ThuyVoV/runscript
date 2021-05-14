@@ -18,13 +18,11 @@
             <input type="submit" value="Add User" name="button_add_user"/>
         </form>
 
-        {% if script_list.user.all %}
             <form action="{% url 'runscript:manage_user' script_list.id %}" method="POST">
                 {% csrf_token %}
 
-                Delete this user:
-
-                <select name="del_user_from_list">
+                Select User:
+                <select name="selected_user">
                     {% for user in script_list.user.all %}
                         {% if user|slugify != script_list.owner|slugify %}
                             <option value="{{ user }}">{{ user }}</option>
@@ -32,9 +30,25 @@
                     {% endfor %}
                 </select>
 
-                <input type="submit" value="Delete User" name="button_del_user"/>
+                <input type="submit" value="Delete User" name="button_del_user"/><br>
+
+                {% for p in perm_text %}
+                    <input type="checkbox" name="{{ p }}" value="clicked"> {{ p }} <br>
+
+                {% endfor %}<br>
+
+                <input type="submit" value="change permissions" name="button_change_perm">
+
             </form>
-        {% endif %}
+{#            <form method="post" action="{% url 'runscript:manage_user' script_list.id %}">#}
+{#                {% csrf_token %}#}
+{#                {% for p in perm_text %}#}
+{#                    <input type="checkbox" name="{{ p }}" value="clicked"> {{ p }} <br>#}
+{##}
+{#                {% endfor %}<br>#}
+{##}
+{#                <input type="submit" value="change permissions" name="button_change_perm">#}
+{#            </form>#}
 
         {% for message in messages %}
             {{ message }}

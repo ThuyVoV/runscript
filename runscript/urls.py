@@ -5,8 +5,9 @@ from . import views
 
 app_name = 'runscript'
 urlpatterns = [
-    path('list/<list_id>/', views.view_and_upload, name='view_and_upload'),
     path('', views.create_list, name="main"),
+    path('list/<list_id>/', views.view_and_upload, name='view_and_upload'),
+    path('<list_id>/manage_user/', views.manage_user, name='manage_user'),
     path('detail/<file_id>/', views.script_detail, name='detail'),
     path('<file_id>/change/', views.script_change, name='change'),
     path('<file_id>/change/confirmedit/', views.script_confirm_edit, name='confirm_edit'),

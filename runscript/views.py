@@ -28,21 +28,25 @@ def create_list(request):
             # then saving that list to a specific user
             ln = form.cleaned_data["list_name"]
             sl = ScriptList(list_name=ln, owner=request.user)
-            sl.save()
-            request.user.user_script_list.add(sl)
+
 
             # create lists of permissions for this new script list
-            content_type = ContentType.objects.get_for_model(UploadFileModel)
-            perm_attributes = ['view', 'add', 'run', 'edit', 'delete', 'manage', 'log']
+            perm_attributes = [
+                'view', 'add', 'run', 'edit', 'delete',
+                'log', 'manage', 'manage_user', 'manage_perm'
+            ]
 
             for p in perm_attributes:
                 Permission.objects.get_or_create(
                     codename=f"{request.user}_{ln}_can_{p}",
                     name=f"{request.user} {ln} can {p}",
-                    content_type=content_type,
+                    content_type=ContentType.objects.get_for_model(UploadFileModel),
                 )
                 perm = Permission.objects.get(codename=f"{request.user}_{ln}_can_{p}")
                 request.user.user_permissions.add(perm)
+
+            sl.save()
+            request.user.user_script_list.add(sl)
 
     else:
         form = CreateScriptListForm()
@@ -98,16 +102,24 @@ def manage_user(request, list_id):
         'script_list': script_list,
         'can_manage': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_manage"),
         'can_log': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_log"),
+        'perm_text': [
+            'view', 'add', 'run', 'edit', 'delete',
+            'log', 'manage', 'manage_user', 'manage_perm'
+        ]
     }
     if request.method == 'POST':
+        # ADD USER
         if request.POST.get("button_add_user"):
             add_user = request.POST.get('add_user_to_list')
-
             # only owner of list can add to users
             if str(request.user) == script_list.owner:
                 if User.objects.filter(username=add_user).exists():
                     messages.success(request, f'You added {add_user} to {script_list.list_name}')
                     script_list.user.add(User.objects.get(username=add_user).pk)
+
+                    perm = Permission.objects.get(codename=f"{script_list.owner}_{script_list.list_name}_can_view")
+                    User.objects.get(username=add_user).user_permissions.add(perm)
+
                     script_log = f'{request.user} added {add_user} to {script_list.list_name}'
                     script_list.scriptlog_set.create(action=script_log, person=request.user)
                 else:
@@ -115,8 +127,9 @@ def manage_user(request, list_id):
             else:
                 messages.error(request, "you must be the owner of this list")
 
+        # DELETE USER
         elif request.POST.get("button_del_user"):
-            del_user = request.POST.get('del_user_from_list')
+            del_user = request.POST.get('selected_user')
 
             if str(request.user) == script_list.owner:
                 if User.objects.filter(username=del_user).exists():
@@ -128,6 +141,21 @@ def manage_user(request, list_id):
                     messages.error(request, "That user does not exist.")
             else:
                 messages.error(request, "you must be the owner of this list")
+
+        # CHANGE USER PERMISSION
+        elif request.POST.get("button_change_perm"):
+
+            user = User.objects.get(username=request.POST.get("selected_user"))
+
+            for p in context['perm_text']:
+                perm = Permission.objects.get(codename=f"{script_list.owner}_{script_list.list_name}_can_{p}")
+                if request.POST.get(p) == "clicked":
+                    user.user_permissions.add(perm)
+                    print(f"{p} clicked")
+                else:
+                    user.user_permissions.remove(perm)
+                    print(f"{p} NOT clicked")
+
 
     return render(request, 'runscript/manage_user.html', context)
 

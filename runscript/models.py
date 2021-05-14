@@ -1,18 +1,9 @@
 from django.db import models
-from django import forms
 from django.utils import timezone
 from django.contrib.auth.models import User
 
-'''
-User
-    ScriptList
-        ScriptLogs
-        UploadFormModel
-'''
-
 
 class ScriptList(models.Model):
-    #user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user_script_list", null=True)
     user = models.ManyToManyField(User, related_name="user_script_list")
     list_name = models.CharField(max_length=100)
     owner = models.CharField(max_length=100)

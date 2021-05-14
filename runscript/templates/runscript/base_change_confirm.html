@@ -12,35 +12,8 @@
 
 </head>
 <body>
-    <form action="{% url 'runscript:change' script_name.id %}" method="get">
-        <input type="submit" value="Cancel" />
-    </form>
-    the url is {{ url }} <br>
-    the file is {{ filename }} <br>
 
-    {% block confirm %}{% endblock confirm %}
-
-{#    <form action="{% url 'runscript:detail' script_name.id %}" method="POST">#}
-{#        {% csrf_token %}#}
-{#        <input type="submit" name={% block edit_yes %}{% endblock edit_yes %}#}
-{#    {% block del_yes %}{% endblock del_yes %} value="yes"/>#}
-{#    </form>#}
-
-    {% block edit_yes %}{% endblock edit_yes %}
-    {% block del_yes %}{% endblock del_yes %}
-
-    <form action="{% url 'runscript:change' script_name.id %}" method="POST">
-        {% csrf_token %}
-        <input type="submit" name="button_no" value="no"/>
-    </form>
-
-    <!-- display script's code -->
-    {% if fileContent %}
-        <pre><code class="python">{% for line in fileContent %}{{ line }}{% endfor %}</code></pre>
-    {% endif %}
-
-{#    {% block delFileContent %}{% endblock delFileContent %}#}
-
+    {% block content %}{% endblock content %}
 
 </body>
 </html>
