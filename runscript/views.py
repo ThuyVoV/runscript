@@ -29,7 +29,6 @@ def create_list(request):
             ln = form.cleaned_data["list_name"]
             sl = ScriptList(list_name=ln, owner=request.user)
 
-
             # create lists of permissions for this new script list
             perm_attributes = [
                 'view', 'add', 'run', 'edit', 'delete',
@@ -155,7 +154,6 @@ def manage_user(request, list_id):
                 else:
                     user.user_permissions.remove(perm)
                     print(f"{p} NOT clicked")
-
 
     return render(request, 'runscript/manage_user.html', context)
 

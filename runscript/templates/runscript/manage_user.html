@@ -1,11 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>manage user</title>
-</head>
-<body>
-
+{% extends "runscript/base.html" %}
+{% block title %}Mange Users{% endblock title %}
+{% block content %}
     <form action="{% url 'runscript:view_and_upload' script_list.id %}" method="get">
         <input type="submit" value="back">
     </form>
@@ -54,5 +49,4 @@
             {{ message }}
         {% endfor %}
     {% endif %}
-</body>
-</html>
+{% endblock content %}

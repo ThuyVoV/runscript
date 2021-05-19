@@ -1,13 +1,9 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <title>View and Upload file page</title>
-</head>
-<body>
-<form action="{% url 'runscript:main' %}" method="GET">
-    <input type="submit" value="Back"/>
-</form>
+{% extends "runscript/base.html" %}
+{% block title %}View and Upload file page{% endblock title %}
+{% block content %}
+    <form action="{% url 'runscript:main' %}" method="GET">
+        <input type="submit" value="Back"/>
+    </form>
 
     {% if user.is_authenticated %}
         {{ script_list.owner }} owns {{ script_list.list_name }}
@@ -53,5 +49,4 @@
     {% else %}
         You must login!
     {% endif %}
-</body>
-</html>
+{% endblock content %}

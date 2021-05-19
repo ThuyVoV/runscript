@@ -1,30 +1,23 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <title>Script List Page</title>
-</head>
-<body>
-{#    <form action="{% url 'homepage:home' %}" method="GET">#}
-{#        <input type="submit" value="Back" />#}
-{#    </form>#}
+{% extends "runscript/base.html" %}
+{% block title %}Script List Page{% endblock title %}
+{% block content %}
     {% if user.is_authenticated %}
         <!-- Upload form. Note enctype attribute! -->
         <form action="#" method="POST" enctype="multipart/form-data">
             {% csrf_token %}
             <p>
                 {{ form.list_name.label }} {{ form.list_name }}
-                
+
             </p>
-            <p><input type="submit" value="Create" /></p>
+            <p><input type="submit" value="Create"/></p>
         </form>
 
         {% if allLists %}
             Lists:
             <ul>
-            {% for list in allLists %}
-                <li><a href="{% url 'runscript:view_and_upload' list.id %}">{{ list.list_name }}</a></li>
-            {% endfor %}
+                {% for list in allLists %}
+                    <li><a href="{% url 'runscript:view_and_upload' list.id %}">{{ list.list_name }}</a></li>
+                {% endfor %}
             </ul>
         {% else %}
             No lists
@@ -33,5 +26,4 @@
     {% else %}
         You must login!
     {% endif %}
-</body>
-</html>
+{% endblock content %}
