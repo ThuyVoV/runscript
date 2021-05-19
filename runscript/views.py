@@ -311,7 +311,7 @@ class Logs(ListView):
     model = ScriptList
     context_object_name = 'logs'
     template_name = 'runscript/logs.html'
-    paginate_by = 5
+    paginate_by = 10
 
     def get_queryset(self):
         script_log = ScriptList.objects.get(pk=self.kwargs['pk']).scriptlog_set.all()[::-1]
