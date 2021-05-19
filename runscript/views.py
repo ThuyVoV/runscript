@@ -122,12 +122,17 @@ def manage_user(request, list_id):
                     script_log = f'{request.user} added {add_user} to {script_list.list_name}'
                     script_list.scriptlog_set.create(action=script_log, person=request.user)
                 else:
-                    messages.error(request, "That user does not exist.")
+                    messages.error(request, "User does not exist.")
             else:
                 messages.error(request, "you must be the owner of this list")
 
         # DELETE USER
         elif request.POST.get("button_del_user"):
+
+            if request.POST.get('selected_user') == "Delete User":
+                messages.info(request, "No changes were made")
+                return render(request, 'runscript/manage_user.html', context)
+
             del_user = request.POST.get('selected_user')
 
             if str(request.user) == script_list.owner:
@@ -143,6 +148,10 @@ def manage_user(request, list_id):
 
         # CHANGE USER PERMISSION
         elif request.POST.get("button_change_perm"):
+
+            if request.POST.get('selected_user') == "Delete User":
+                messages.info(request, "No changes were made")
+                return render(request, 'runscript/manage_user.html', context)
 
             user = User.objects.get(username=request.POST.get("selected_user"))
 
@@ -302,7 +311,7 @@ class Logs(ListView):
     model = ScriptList
     context_object_name = 'logs'
     template_name = 'runscript/logs.html'
-    paginate_by = 20
+    paginate_by = 5
 
     def get_queryset(self):
         script_log = ScriptList.objects.get(pk=self.kwargs['pk']).scriptlog_set.all()[::-1]
