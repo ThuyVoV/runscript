@@ -149,7 +149,7 @@ def manage_user(request, list_id):
         # CHANGE USER PERMISSION
         elif request.POST.get("button_change_perm"):
 
-            if request.POST.get('selected_user') == "Delete User":
+            if request.POST.get('selected_user') == "Delete User" or str(request.user):
                 messages.info(request, "No changes were made")
                 return render(request, 'runscript/manage_user.html', context)
 
@@ -159,10 +159,15 @@ def manage_user(request, list_id):
                 perm = Permission.objects.get(codename=f"{script_list.owner}_{script_list.list_name}_can_{p}")
                 if request.POST.get(p) == "clicked":
                     user.user_permissions.add(perm)
-                    print(f"{p} clicked")
+                    messages.info(request, f"Gave {user} {p} permission")
                 else:
+                    if p == "manage_perm":
+                        if user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_{p}") \
+                                and str(request.user) != script_list.owner:
+                            messages.warning(request, f"You cannot remove {p} permission from {user}")
+                            return render(request, 'runscript/manage_user.html', context)
                     user.user_permissions.remove(perm)
-                    print(f"{p} NOT clicked")
+                    messages.info(request, f"Remove {user} {p} permission")
 
     return render(request, 'runscript/manage_user.html', context)
 

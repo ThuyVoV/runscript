@@ -28,7 +28,8 @@
 
 
                 <input type="submit" class="btn btn-danger" value="Delete User" name="button_del_user"/><br>
-                {#            <div class="container">#}
+
+                <div class="container-fluid pt-4">
                 {% for p in perm_text %}
                     <div class="form-check-inline">
                         <label class="form-check-label">
@@ -38,10 +39,10 @@
                 {% endfor %}
 
                 <input type="submit" class="btn btn-info" value="change permissions" name="button_change_perm">
-
+</div>
             </form>
             {% for message in messages %}
-                {{ message }}
+                {{ message }}<br>
             {% endfor %}
         </div>
         {#            <form method="post" action="{% url 'runscript:manage_user' script_list.id %}">#}
