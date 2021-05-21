@@ -32,7 +32,7 @@ def create_list(request):
             # create lists of permissions for this new script list
             perm_attributes = [
                 'view', 'add', 'run', 'edit', 'delete',
-                'log', 'manage', 'manage_user', 'manage_perm'
+                'log', 'manage_user', 'manage_perm'
             ]
 
             for p in perm_attributes:
@@ -62,13 +62,15 @@ def create_list(request):
 @access_check
 def view_and_upload(request, list_id):
     script_list = ScriptList.objects.get(pk=list_id)
-
+    user = request.user
+    print(type(request.user), request.user)
+    print(type(user), user)
     context = {
         'script_list': script_list,
-        'can_manage': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_manage"),
-        'can_log': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_log"),
-        'can_view': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_view"),
-        'can_add': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_add")
+        'can_manage_user': user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_manage_user"),
+        'can_log': user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_log"),
+        'can_view': user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_view"),
+        'can_add': user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_add")
     }
 
     if request.method == 'POST':
@@ -79,7 +81,7 @@ def view_and_upload(request, list_id):
                 new_script = form.cleaned_data["script_name"]
                 new_file = form.cleaned_data["upload_file"]
                 script_list.uploadfilemodel_set.create(script_name=new_script, upload_file=new_file)
-                script_log = f'{request.user} uploaded {new_script} to {script_list.list_name}'
+                script_log = f'{user} uploaded {new_script} to {script_list.list_name}'
                 script_list.scriptlog_set.create(action=script_log, person=request.user)
 
                 return redirect('runscript:view_and_upload', list_id)
@@ -99,11 +101,12 @@ def manage_user(request, list_id):
     script_list = ScriptList.objects.get(pk=list_id)
     context = {
         'script_list': script_list,
-        'can_manage': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_manage"),
+        'can_manage_user': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_manage"),
+        'can_manage_perm': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_perm"),
         'can_log': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_log"),
         'perm_text': [
             'view', 'add', 'run', 'edit', 'delete',
-            'log', 'manage', 'manage_user', 'manage_perm'
+            'log', 'manage_user', 'manage_perm'
         ]
     }
     if request.method == 'POST':
@@ -130,7 +133,7 @@ def manage_user(request, list_id):
         elif request.POST.get("button_del_user"):
 
             if request.POST.get('selected_user') == "Delete User":
-                messages.info(request, "No changes were made")
+                messages.info(request, "No changes were made AA")
                 return render(request, 'runscript/manage_user.html', context)
 
             del_user = request.POST.get('selected_user')
@@ -149,8 +152,8 @@ def manage_user(request, list_id):
         # CHANGE USER PERMISSION
         elif request.POST.get("button_change_perm"):
 
-            if request.POST.get('selected_user') == "Delete User" or str(request.user):
-                messages.info(request, "No changes were made")
+            if request.POST.get('selected_user') == "Delete User":
+                messages.info(request, "No changes were madeBB")
                 return render(request, 'runscript/manage_user.html', context)
 
             user = User.objects.get(username=request.POST.get("selected_user"))

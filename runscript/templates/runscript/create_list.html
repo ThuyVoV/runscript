@@ -2,6 +2,7 @@
 {% block title %}Script List Page{% endblock title %}
 {% block content %}
     {% if user.is_authenticated %}
+        Signed in as: {{ user }}
         <!-- Upload form. Note enctype attribute! -->
         <form action="#" method="POST" enctype="multipart/form-data">
             {% csrf_token %}

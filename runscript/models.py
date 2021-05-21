@@ -9,7 +9,7 @@ class ScriptList(models.Model):
     owner = models.CharField(max_length=100)
 
     def __str__(self):
-        return self.list_name
+        return f"{self.owner} - {self.list_name}"
 
 
 class ScriptLog(models.Model):
