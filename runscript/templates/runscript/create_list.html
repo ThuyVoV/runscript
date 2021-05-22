@@ -2,15 +2,30 @@
 {% block title %}Script List Page{% endblock title %}
 {% block content %}
     {% if user.is_authenticated %}
-        Signed in as: {{ user }}
+        Signed in as: {{ user }} <br>
         <!-- Upload form. Note enctype attribute! -->
         <form action="#" method="POST" enctype="multipart/form-data">
             {% csrf_token %}
-            <p>
-                {{ form.list_name.label }} {{ form.list_name }}
 
-            </p>
-            <p><input type="submit" value="Create"/></p>
+            {{ form.list_name.label }} {{ form.list_name }}
+
+            <input type="submit" value="Create" name="create">
+
+        </form>
+
+        <form action="#" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+
+
+            <select name="list_del">
+                    <option value="Delete List">Delete List</option>
+                    {% for l in my_list %}
+
+                            <option value="{{ l }}">{{ l }}</option>
+
+                    {% endfor %}
+                </select>
+            <input type="submit" value="delete list" name="button_del_list">
         </form>
 
         {% if allLists %}

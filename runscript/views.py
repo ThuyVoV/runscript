@@ -21,38 +21,48 @@ import shlex
 # create an empty lists that will hold scripts
 @login_required(login_url='/login/')
 def create_list(request):
+    perm_attributes = [
+        'view', 'add', 'run', 'edit', 'delete',
+        'log', 'manage_user', 'manage_perm'
+    ]
+    form = CreateScriptListForm()
     if request.method == "POST":
-        form = CreateScriptListForm(request.POST)
-        if form.is_valid():
-            # grab the string from the input and create the list with that name
-            # then saving that list to a specific user
-            ln = form.cleaned_data["list_name"]
-            sl = ScriptList(list_name=ln, owner=request.user)
+        if request.POST.get("create"):
+            form = CreateScriptListForm(request.POST)
+            if form.is_valid():
+                # grab the string from the input and create the list with that name
+                # then saving that list to a specific user
+                ln = form.cleaned_data["list_name"]
+                sl = ScriptList(list_name=ln, owner=request.user)
 
-            # create lists of permissions for this new script list
-            perm_attributes = [
-                'view', 'add', 'run', 'edit', 'delete',
-                'log', 'manage_user', 'manage_perm'
-            ]
+                # create lists of permissions for this new script list
+                for p in perm_attributes:
+                    Permission.objects.get_or_create(
+                        codename=f"{request.user}_{ln}_can_{p}",
+                        name=f"{request.user} {ln} can {p}",
+                        content_type=ContentType.objects.get_for_model(UploadFileModel),
+                    )
+                    perm = Permission.objects.get(codename=f"{request.user}_{ln}_can_{p}")
+                    request.user.user_permissions.add(perm)
 
-            for p in perm_attributes:
-                Permission.objects.get_or_create(
-                    codename=f"{request.user}_{ln}_can_{p}",
-                    name=f"{request.user} {ln} can {p}",
-                    content_type=ContentType.objects.get_for_model(UploadFileModel),
-                )
-                perm = Permission.objects.get(codename=f"{request.user}_{ln}_can_{p}")
-                request.user.user_permissions.add(perm)
+                sl.save()
+                request.user.user_script_list.add(sl)
 
-            sl.save()
-            request.user.user_script_list.add(sl)
+        elif request.POST.get("button_del_list"):
+            list_name = request.POST.get("list_del").split(' ')[-1]
+            script_list = ScriptList.objects.get(list_name=list_name)
 
-    else:
-        form = CreateScriptListForm()
+            if str(request.user) == script_list.owner:
+                for p in perm_attributes:
+                    Permission.objects.get(codename=f"{script_list.owner}_{script_list.list_name}_can_{p}").delete()
+
+                script_list.delete()
 
     context = {
         'form': form,
-        'allLists': request.user.user_script_list.all()
+        'allLists': request.user.user_script_list.all(),
+        'my_list': ScriptList.objects.filter(owner=str(request.user))
+
     }
 
     return render(request, 'runscript/create_list.html', context)
@@ -63,8 +73,7 @@ def create_list(request):
 def view_and_upload(request, list_id):
     script_list = ScriptList.objects.get(pk=list_id)
     user = request.user
-    print(type(request.user), request.user)
-    print(type(user), user)
+
     context = {
         'script_list': script_list,
         'can_manage_user': user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_manage_user"),
@@ -73,6 +82,7 @@ def view_and_upload(request, list_id):
         'can_add': user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_add")
     }
 
+    form = UploadFileForm()
     if request.method == 'POST':
         if request.POST.get("button_upload"):
             form = UploadFileForm(request.POST, request.FILES)
@@ -85,10 +95,6 @@ def view_and_upload(request, list_id):
                 script_list.scriptlog_set.create(action=script_log, person=request.user)
 
                 return redirect('runscript:view_and_upload', list_id)
-        else:
-            form = UploadFileForm()
-    else:
-        form = UploadFileForm()
 
     context['form'] = form
 
@@ -101,7 +107,8 @@ def manage_user(request, list_id):
     script_list = ScriptList.objects.get(pk=list_id)
     context = {
         'script_list': script_list,
-        'can_manage_user': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_manage"),
+        'can_manage_user': request.user.has_perm(
+            f"runscript.{script_list.owner}_{script_list.list_name}_can_manage_user"),
         'can_manage_perm': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_perm"),
         'can_log': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_log"),
         'perm_text': [
@@ -194,7 +201,7 @@ def script_detail(request, file_id):
             args = request.POST.get("arguments")
             t = open(vh.get_temp(), 'w')
 
-            # get arguments separated by space and quotes
+            # get arguments separated by space and quotes example:
             # 123 "hello there" 456 -> ['123', 'hello there', 456']
             args = shlex.split(args)
             subprocess.run([sys.executable, context['script_name'].upload_file.path] + args, text=True, stdout=t)
