@@ -111,11 +111,12 @@ def manage_user(request, list_id):
             f"runscript.{script_list.owner}_{script_list.list_name}_can_manage_user"),
         'can_manage_perm': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_perm"),
         'can_log': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_log"),
-        'perm_text': [
-            'view', 'add', 'run', 'edit', 'delete',
-            'log', 'manage_user', 'manage_perm'
-        ]
     }
+
+    perm_text = [
+        'view', 'add', 'run', 'edit', 'delete',
+        'log', 'manage_user', 'manage_perm'
+    ]
     if request.method == 'POST':
         # ADD USER
         if request.POST.get("button_add_user"):
@@ -138,8 +139,7 @@ def manage_user(request, list_id):
 
         # DELETE USER
         elif request.POST.get("button_del_user"):
-
-            if request.POST.get('selected_user') == "Delete User":
+            if request.POST.get('selected_user') == "Select User":
                 messages.info(request, "No changes were made AA")
                 return render(request, 'runscript/manage_user.html', context)
 
@@ -159,13 +159,13 @@ def manage_user(request, list_id):
         # CHANGE USER PERMISSION
         elif request.POST.get("button_change_perm"):
 
-            if request.POST.get('selected_user') == "Delete User":
+            if request.POST.get('selected_user') == "Select User":
                 messages.info(request, "No changes were madeBB")
                 return render(request, 'runscript/manage_user.html', context)
 
             user = User.objects.get(username=request.POST.get("selected_user"))
 
-            for p in context['perm_text']:
+            for p in perm_text:
                 perm = Permission.objects.get(codename=f"{script_list.owner}_{script_list.list_name}_can_{p}")
                 if request.POST.get(p) == "clicked":
                     user.user_permissions.add(perm)
@@ -178,6 +178,18 @@ def manage_user(request, list_id):
                             return render(request, 'runscript/manage_user.html', context)
                     user.user_permissions.remove(perm)
                     messages.info(request, f"Remove {user} {p} permission")
+
+        elif request.POST.get("button_select_user"):
+            if request.POST.get("selected_user") == "Select User":
+                return render(request, 'runscript/manage_user.html', context)
+
+            user = User.objects.get(username=request.POST.get("selected_user"))
+            has_perm = []
+            for p in perm_text:
+                has_perm.append(user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_{p}"))
+
+            context['perm'] = zip(has_perm, perm_text)
+            context['selected_user'] = user
 
     return render(request, 'runscript/manage_user.html', context)
 

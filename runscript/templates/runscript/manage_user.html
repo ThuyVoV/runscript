@@ -1,10 +1,6 @@
 {% extends "runscript/base.html" %}
 {% block title %}Mange Users{% endblock title %}
 {% block content %}
-    <form action="{% url 'runscript:view_and_upload' script_list.id %}" method="get">
-        <input type="submit" value="back">
-    </form>
-
     {% if can_manage_user %}
         <div class="container-fluid">
             <form action="{% url 'runscript:view_and_upload' script_list.id %}" method="get">
@@ -12,50 +8,58 @@
             </form>
             <form action="{% url 'runscript:manage_user' script_list.id %}" method="POST">
                 {% csrf_token %}
+                <!-- USER ADD -->
                 Add user to this list
                 <input type="text" name="add_user_to_list">
                 <input type="submit" class="btn btn-primary" value="Add User" name="button_add_user"/>
 
-
+                <!-- USER SELECTION -->
                 <select name="selected_user">
-                    <option value="Delete User">Delete User</option>
-                    {% for user in script_list.user.all %}
-                        {% if user|slugify != script_list.owner|slugify %}
-                            <option value="{{ user }}">{{ user }}</option>
-                        {% endif %}
-                    {% endfor %}
+                    {% if selected_user %}
+                        <option value="{{ selected_user }}">{{ selected_user }}</option>
+                        {% for user in script_list.user.all %}
+                            {% if user|slugify != script_list.owner|slugify and user|slugify != selected_user|slugify%}
+                                <option value="{{ user }}">{{ user }}</option>
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <option value="Select User">Select User</option>
+                        {% for user in script_list.user.all %}
+                            {% if user|slugify != script_list.owner|slugify %}
+                                <option value="{{ user }}">{{ user }}</option>
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
                 </select>
+                <input type="submit" class="btn btn-primary" value="Select User" name="button_select_user"/><br>
 
-
-                <input type="submit" class="btn btn-danger" value="Delete User" name="button_del_user"/><br>
+                <!-- PERMISSIONS -->
                 {% if can_manage_perm %}
-                <div class="container-fluid pt-4">
-                {% for p in perm_text %}
-                    <div class="form-check-inline">
-                        <label class="form-check-label">
-                            <input class="form-check-inline" type="checkbox" name="{{ p }}" value="clicked"> {{ p }}
-                        </label>
-                    </div>
-                {% endfor %}
+                    {% if perm %}
+                        <div class="container-fluid pt-4">
+                        {% for p in perm %}
+                            <div class="form-check-inline">
+                                {% if p.0 %}
 
-                <input type="submit" class="btn btn-info" value="change permissions" name="button_change_perm">
-{% endif  %}
+                                    <label class="form-check-label">
+                                        <input class="form-check-inline" type="checkbox" name="{{ p.1 }}" value="clicked" checked> {{ p.1 }}
+                                    </label>
+                                {% else %}
+                                    <label class="form-check-label">
+                                        <input class="form-check-inline" type="checkbox" name="{{ p.1 }}" value="clicked"> {{ p.1 }}
+                                    </label>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                        <input type="submit" class="btn btn-info" value="change permissions" name="button_change_perm">
+                        <input type="submit" class="btn btn-danger" value="Delete User" name="button_del_user"/>
+                    {% endif %}
+                {% endif %}
                 </div>
             </form>
             {% for message in messages %}
                 {{ message }}<br>
             {% endfor %}
         </div>
-        {#            <form method="post" action="{% url 'runscript:manage_user' script_list.id %}">#}
-        {#                {% csrf_token %}#}
-        {#                {% for p in perm_text %}#}
-        {#                    <input type="checkbox" name="{{ p }}" value="clicked"> {{ p }} <br>#}
-        {##}
-        {#                {% endfor %}<br>#}
-        {##}
-        {#                <input type="submit" value="change permissions" name="button_change_perm">#}
-        {#            </form>#}
-
-
     {% endif %}
 {% endblock content %}
