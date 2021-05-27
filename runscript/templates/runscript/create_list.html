@@ -10,19 +10,15 @@
             {{ form.list_name.label }} {{ form.list_name }}
 
             <input type="submit" value="Create" name="create">
-
         </form>
 
         <form action="#" method="POST" enctype="multipart/form-data">
             {% csrf_token %}
 
-
             <select name="list_del">
                     <option value="Delete List">Delete List</option>
                     {% for l in my_list %}
-
                             <option value="{{ l }}">{{ l }}</option>
-
                     {% endfor %}
                 </select>
             <input type="submit" value="delete list" name="button_del_list">
@@ -38,7 +34,6 @@
         {% else %}
             No lists
         {% endif %}
-
     {% else %}
         You must login!
     {% endif %}

@@ -25,7 +25,12 @@ def create_list(request):
         'view', 'add', 'run', 'edit', 'delete',
         'log', 'manage_user', 'manage_perm'
     ]
-    form = CreateScriptListForm()
+    context = {
+        'allLists': request.user.user_script_list.all(),
+        'my_list': ScriptList.objects.filter(owner=str(request.user)),
+        'form': CreateScriptListForm()
+    }
+
     if request.method == "POST":
         if request.POST.get("create"):
             form = CreateScriptListForm(request.POST)
@@ -47,23 +52,21 @@ def create_list(request):
 
                 sl.save()
                 request.user.user_script_list.add(sl)
+                context['form'] = form
 
         elif request.POST.get("button_del_list"):
-            list_name = request.POST.get("list_del").split(' ')[-1]
-            script_list = ScriptList.objects.get(list_name=list_name)
+            if request.POST.get("list_del") == "Delete List":
+                pass
+            else:
+                list_name = request.POST.get("list_del").split(' ')[-1]
+                script_list = ScriptList.objects.get(list_name=list_name)
 
-            if str(request.user) == script_list.owner:
-                for p in perm_attributes:
-                    Permission.objects.get(codename=f"{script_list.owner}_{script_list.list_name}_can_{p}").delete()
+                if str(request.user) == script_list.owner:
+                    for p in perm_attributes:
+                        Permission.objects.get(codename=f"{script_list.owner}_{script_list.list_name}_can_{p}").delete()
 
-                script_list.delete()
+                    script_list.delete()
 
-    context = {
-        'form': form,
-        'allLists': request.user.user_script_list.all(),
-        'my_list': ScriptList.objects.filter(owner=str(request.user))
-
-    }
 
     return render(request, 'runscript/create_list.html', context)
 

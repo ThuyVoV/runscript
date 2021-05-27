@@ -1,8 +1,14 @@
 # Installation
 git clone https://github.com/ThuyVoV/runscripts.git <br>
 
-In settings.py add 'runscript.apps.RunscriptConfig' to your INSTALLED_APPS.<br>
-In urls.py add path('runscript/', include('runscript.urls')) <br>
+In settings.py add:
+'runscript.apps.RunscriptConfig' to your INSTALLED_APPS.<br>
+STATICFILES_DIRS = [ <br>
+    BASE_DIR / "runscript/templates/runscript/", <br>
+] <br>
+
+In urls.py add: <br>
+path('runscript/', include('runscript.urls')) <br>
 
 Make your migrations:<br>
 python manage.py makemigrations runscript<br>
