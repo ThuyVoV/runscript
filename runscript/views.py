@@ -4,12 +4,13 @@ from django.contrib.auth.models import User, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.shortcuts import render, redirect
+from django.utils.decorators import method_decorator
 from django.views.generic.list import ListView
 
 from .models import UploadFileModel, ScriptList
 from .forms import UploadFileForm, CreateScriptListForm
 
-from runscript.helper_func.decorators import access_check
+from runscript.helper_func.decorators import access_check, AccessCheck
 from .helper_func import view_helper as vh
 
 import subprocess
@@ -17,9 +18,14 @@ import sys
 import os
 import shlex
 
+#AIFIAWENFIAWNFE (<WSGIRequest: GET '/runscript/'>,)
+#AIFIAWENFIAWNFE (<WSGIRequest: GET '/runscript/list/9/'>,)
+#AIFIAWENFIAWNFE (<WSGIRequest: POST '/runscript/14/manage_user/'>,)
+
 
 # create an empty lists that will hold scripts
 @login_required(login_url='/login/')
+@AccessCheck
 def create_list(request):
     perm_attributes = [
         'view', 'add', 'run', 'edit', 'delete',
@@ -67,12 +73,11 @@ def create_list(request):
 
                     script_list.delete()
 
-
     return render(request, 'runscript/create_list.html', context)
 
 
 @login_required(login_url='/login/')
-@access_check
+@AccessCheck
 def view_and_upload(request, list_id):
     script_list = ScriptList.objects.get(pk=list_id)
     user = request.user
@@ -105,7 +110,7 @@ def view_and_upload(request, list_id):
 
 
 @login_required(login_url='/login/')
-@access_check
+@AccessCheck
 def manage_user(request, list_id):
     script_list = ScriptList.objects.get(pk=list_id)
     context = {
@@ -337,15 +342,24 @@ def logs(request, list_id):
     return render(request, 'runscript/logs.html', context)
 
 
+@method_decorator(login_required(login_url='/login/'), name='dispatch')
+@method_decorator(AccessCheck, name='dispatch')
 class Logs(ListView):
     model = ScriptList
     context_object_name = 'logs'
     template_name = 'runscript/logs.html'
-    paginate_by = 10
+    paginate_by = 5
 
     def get_queryset(self):
         script_log = ScriptList.objects.get(pk=self.kwargs['pk']).scriptlog_set.all()[::-1]
         return script_log
+
+    def dispatch(self, request, *args, **kwargs):
+        # print(f"dispatch {self.request.user}")
+        # print(request, request.user)
+        # print(args)
+        # print(kwargs)
+        return super().dispatch(self.request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         # get all the scriptLog (from get_queryset)
