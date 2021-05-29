@@ -17,27 +17,30 @@
         <pre><code class="python">{% for line in fileContent %}{{ line }}{% endfor %}</code></pre>
 
         <!-- create button to run the script and display it -->
-        {% if can_run %}
-            <form action="{% url 'runscript:detail' script_name.id %}" method="POST">
-                {% csrf_token %}
-                Enter arguments here
-                <input type="text" name="arguments">
-                <input type="submit" value="Run this script" name="button_run_script"/>
-            </form>
-        {% endif %}
-
         {% if can_edit %}
-            <form action="{% url 'runscript:change' script_name.id %}" method="POST">
-                {% csrf_token %}
-                <input type="submit" value="Edit this script"/>
-            </form><br>
+            {% if can_run %}
+                <form action="{% url 'runscript:detail' script_name.id %}" method="POST">
+                    {% csrf_token %}
+                    Enter arguments here
+                    <input type="text" name="arguments">
+                    <input type="submit" value="Run this script" name="button_run_script"/>
+                </form>
+            {% endif %}
+
+
+                <form action="{% url 'runscript:change' script_name.id %}" method="POST">
+                    {% csrf_token %}
+                    <input type="submit" value="Edit this script"/>
+                </form><br>
         {% endif %}
 
         <!-- get the output of the script -->
-        {% if output %}
-            {% for line in output %}{{ line }}<br>{% endfor %}
-        {% else %}
-            No scripts have been ran
+        {%  if can_run %}
+            {% if output %}
+                {% for line in output %}{{ line }}<br>{% endfor %}
+            {% else %}
+                No scripts have been ran
+            {% endif %}
         {% endif %}
     {% endif %}
 {% endblock content %}

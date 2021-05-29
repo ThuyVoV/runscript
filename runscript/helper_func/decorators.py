@@ -19,20 +19,20 @@ class AccessCheck(object):
         self.func = func
 
     def __call__(self, *args, **kwargs):
+        try:
+            print(self.func.__name__)
+        except Exception:
+            print("no name")
+
         script_list = get_list(**kwargs)
+
         if script_list is None:
             return self.func(*args, **kwargs)
         if args[0].user not in script_list.user.all():
             return redirect('runscript:main')
         return self.func(*args, **kwargs)
 
+    def check_permission(self, script_list):
+        pass
 
-def permission_check(func):
-    def wrapper(request, *args, **kwargs):
-        script_list = get_list(**kwargs)
 
-        if request.user not in script_list.user.all():
-            return redirect('runscript:main')
-
-        return func(request, *args, **kwargs)
-    return wrapper

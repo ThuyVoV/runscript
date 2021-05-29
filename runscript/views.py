@@ -10,7 +10,7 @@ from django.views.generic.list import ListView
 from .models import UploadFileModel, ScriptList
 from .forms import UploadFileForm, CreateScriptListForm
 
-from runscript.helper_func.decorators import access_check, AccessCheck
+from runscript.helper_func.decorators import AccessCheck
 from .helper_func import view_helper as vh
 
 import subprocess
@@ -18,17 +18,13 @@ import sys
 import os
 import shlex
 
-#AIFIAWENFIAWNFE (<WSGIRequest: GET '/runscript/'>,)
-#AIFIAWENFIAWNFE (<WSGIRequest: GET '/runscript/list/9/'>,)
-#AIFIAWENFIAWNFE (<WSGIRequest: POST '/runscript/14/manage_user/'>,)
-
 
 # create an empty lists that will hold scripts
 @login_required(login_url='/login/')
 @AccessCheck
 def create_list(request):
     perm_attributes = [
-        'view', 'add', 'run', 'edit', 'delete',
+        'view', 'add', 'edit', 'run', 'delete',
         'log', 'manage_user', 'manage_perm'
     ]
     context = {
@@ -121,8 +117,8 @@ def manage_user(request, list_id):
         'can_log': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_log"),
     }
 
-    perm_text = [
-        'view', 'add', 'run', 'edit', 'delete',
+    perm_attributes = [
+        'view', 'add', 'edit', 'run', 'delete',
         'log', 'manage_user', 'manage_perm'
     ]
     if request.method == 'POST':
@@ -173,7 +169,7 @@ def manage_user(request, list_id):
 
             user = User.objects.get(username=request.POST.get("selected_user"))
 
-            for p in perm_text:
+            for p in perm_attributes:
                 perm = Permission.objects.get(codename=f"{script_list.owner}_{script_list.list_name}_can_{p}")
                 if request.POST.get(p) == "clicked":
                     user.user_permissions.add(perm)
@@ -193,17 +189,17 @@ def manage_user(request, list_id):
 
             user = User.objects.get(username=request.POST.get("selected_user"))
             has_perm = []
-            for p in perm_text:
+            for p in perm_attributes:
                 has_perm.append(user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_{p}"))
 
-            context['perm'] = zip(has_perm, perm_text)
+            context['perm'] = zip(has_perm, perm_attributes)
             context['selected_user'] = user
 
     return render(request, 'runscript/manage_user.html', context)
 
 
 @login_required(login_url='/login/')
-@access_check
+@AccessCheck
 def script_detail(request, file_id):
     script_list = vh.get_list(file_id=file_id)
     output = []
@@ -239,7 +235,7 @@ def script_detail(request, file_id):
 
 
 @login_required(login_url='/login/')
-@access_check
+@AccessCheck
 def script_change(request, file_id):
     script_list = vh.get_list(file_id=file_id)
     context = {
@@ -250,8 +246,6 @@ def script_change(request, file_id):
         'can_edit': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_edit"),
         'can_delete': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_delete"),
     }
-
-    print(f"THIS IS CAN DELETE {context['can_delete']}")
 
     # if pressing no on edit confirmation return back to change page
     # while keeping the edits
@@ -265,7 +259,7 @@ def script_change(request, file_id):
 
 # after pressing edit button on change page
 @login_required(login_url='/login/')
-@access_check
+@AccessCheck
 def script_confirm_edit(request, file_id):
     url, file_path = vh.get_paths(file_id)
     script_list = vh.get_list(file_id=file_id)
@@ -278,14 +272,12 @@ def script_confirm_edit(request, file_id):
     script_list = ScriptList.objects.get(pk=context['script_name'].script_list_id)
     if request.method == 'POST':
         if request.POST.get("button_edit"):
-            print("making sure")
             vh.write_to_file(request.POST.get('script_edit'), vh.get_temp())
             context['fileContent'] = vh.get_file_content(vh.get_temp())
 
             return render(request, 'runscript/script_confirm_edit.html', context)
 
         if request.POST.get("button_edit_yes"):
-            print("pressed edit yes")
             url, file_path = vh.get_paths(file_id)
             temp = open(vh.get_temp(), 'r')
             vh.write_to_file(temp, file_path)
@@ -300,7 +292,7 @@ def script_confirm_edit(request, file_id):
 
 # after pressing delete button on change page
 @login_required(login_url='/login/')
-@access_check
+@AccessCheck
 def script_confirm_delete(request, file_id):
     url, file_path = vh.get_paths(file_id)
     script_list = vh.get_list(file_id=file_id)
@@ -313,7 +305,7 @@ def script_confirm_delete(request, file_id):
     }
 
     script_list = ScriptList.objects.get(pk=context['script_name'].script_list_id)
-    print(context['script_name'].script_list_id)
+
     if request.method == "POST":
         if request.POST.get("button_delete_yes"):
             os.remove(file_path)
@@ -326,7 +318,7 @@ def script_confirm_delete(request, file_id):
 
 
 @login_required(login_url='/login/')
-@access_check
+@AccessCheck
 def logs(request, list_id):
     script_list = ScriptList.objects.get(pk=list_id)
 
@@ -355,10 +347,6 @@ class Logs(ListView):
         return script_log
 
     def dispatch(self, request, *args, **kwargs):
-        # print(f"dispatch {self.request.user}")
-        # print(request, request.user)
-        # print(args)
-        # print(kwargs)
         return super().dispatch(self.request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
