@@ -89,7 +89,6 @@ def view_and_upload(request, list_id):
     #     context[c] = request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_{c}")
 
     vh.get_perms(request, script_list, context)
-    print(context)
 
     form = UploadFileForm()
     if request.method == 'POST':
@@ -125,7 +124,6 @@ def manage_user(request, list_id):
     # for c in check_perm:
     #     context[c] = request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_{c}")
     vh.get_perms(request, script_list, context)
-    print(context)
 
     perm_attributes = [
         'view', 'add', 'edit', 'run', 'delete',
@@ -339,19 +337,32 @@ def script_confirm_delete(request, file_id):
     return render(request, 'runscript/script_confirm_delete.html', context)
 
 
+# changed page_obj to logs for pagination
 @login_required(login_url='/login/')
 @AccessCheck
 def logs(request, list_id):
     script_list = ScriptList.objects.get(pk=list_id)
 
-    users = []
-    a = list(script_list.scriptlog_set.all()[::-1])
-    for u in a:
-        users.append(str(u).split(' ')[0])
-
     context = {
-        'logs': zip(script_list.scriptlog_set.all()[::-1], users)
+        #'logs': zip(script_list.scriptlog_set.all()[::-1], users)
+        'logs': script_list.scriptlog_set.all()[::-1],
+        'pk': list_id,
+        'is_paginated': True
     }
+
+    vh.get_perms(request, script_list, context)
+
+    paginator = Paginator(context['logs'], 5)
+    page_num = request.GET.get("page")
+
+    try:
+        page = paginator.page(page_num)
+    except PageNotAnInteger:
+        page = paginator.page(1)
+    except EmptyPage:
+        page = paginator.page(paginator.num_pages)
+
+    context['logs'] = page
 
     return render(request, 'runscript/logs.html', context)
 
