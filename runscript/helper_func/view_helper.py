@@ -36,3 +36,10 @@ def get_list(**kwargs):
         return ScriptList.objects.get(pk=script_list_id)
     elif 'pk' in kwargs:
         return ScriptList.objects.get(pk=kwargs['pk'])
+
+
+def get_perms(request, script_list, context):
+    check_perm = ['can_view', 'can_add', 'can_edit', 'can_run', 'can_delete', 'can_log', 'can_manage_user',
+                  'can_manage_perm']
+    for c in check_perm:
+        context[c] = request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_{c}")

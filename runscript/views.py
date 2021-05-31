@@ -76,15 +76,20 @@ def create_list(request):
 @AccessCheck
 def view_and_upload(request, list_id):
     script_list = ScriptList.objects.get(pk=list_id)
-    user = request.user
 
     context = {
         'script_list': script_list,
-        'can_manage_user': user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_manage_user"),
-        'can_log': user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_log"),
-        'can_view': user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_view"),
-        'can_add': user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_add")
+        # 'can_manage_user': user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_manage_user"),
+        # 'can_log': user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_log"),
+        # 'can_view': user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_view"),
+        # 'can_add': user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_add")
     }
+    # check_perm = ['can_view', 'can_add', 'can_log', 'can_manage_user']
+    # for c in check_perm:
+    #     context[c] = request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_{c}")
+
+    vh.get_perms(request, script_list, context)
+    print(context)
 
     form = UploadFileForm()
     if request.method == 'POST':
@@ -95,7 +100,7 @@ def view_and_upload(request, list_id):
                 new_script = form.cleaned_data["script_name"]
                 new_file = form.cleaned_data["upload_file"]
                 script_list.uploadfilemodel_set.create(script_name=new_script, upload_file=new_file)
-                script_log = f'{user} uploaded {new_script} to {script_list.list_name}'
+                script_log = f'{request.user} uploaded {new_script} to {script_list.list_name}'
                 script_list.scriptlog_set.create(action=script_log, person=request.user)
 
                 return redirect('runscript:view_and_upload', list_id)
@@ -109,13 +114,18 @@ def view_and_upload(request, list_id):
 @AccessCheck
 def manage_user(request, list_id):
     script_list = ScriptList.objects.get(pk=list_id)
+    check_perm = ['can_log', 'can_manage_user', 'can_mange_perm']
     context = {
         'script_list': script_list,
-        'can_manage_user': request.user.has_perm(
-            f"runscript.{script_list.owner}_{script_list.list_name}_can_manage_user"),
-        'can_manage_perm': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_perm"),
-        'can_log': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_log"),
+        # 'can_manage_user': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_manage_user"),
+        # 'can_manage_perm': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_manage_perm"),
+        # 'can_log': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_log"),
     }
+    # check_perm = ['can_log', 'can_manage_user', 'can_mange_perm']
+    # for c in check_perm:
+    #     context[c] = request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_{c}")
+    vh.get_perms(request, script_list, context)
+    print(context)
 
     perm_attributes = [
         'view', 'add', 'edit', 'run', 'delete',
@@ -175,7 +185,7 @@ def manage_user(request, list_id):
                     user.user_permissions.add(perm)
                     messages.info(request, f"Gave {user} {p} permission")
                 else:
-                    if p == "manage_perm":
+                    if p == "manage_perm" or p == "manage_user":
                         if user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_{p}") \
                                 and str(request.user) != script_list.owner:
                             messages.warning(request, f"You cannot remove {p} permission from {user}")
@@ -183,6 +193,7 @@ def manage_user(request, list_id):
                     user.user_permissions.remove(perm)
                     messages.info(request, f"Remove {user} {p} permission")
 
+        # USER SELECTION
         elif request.POST.get("button_select_user"):
             if request.POST.get("selected_user") == "Select User":
                 return render(request, 'runscript/manage_user.html', context)
@@ -205,10 +216,16 @@ def script_detail(request, file_id):
     output = []
     context = {
         'script_name': UploadFileModel.objects.get(pk=file_id),
-        'can_view': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_view"),
-        'can_run': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_run"),
-        'can_edit': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_edit")
+        # 'can_view': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_view"),
+        # 'can_run': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_run"),
+        # 'can_edit': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_edit")
     }
+
+    # check_perm = ['can_view', 'can_edit', 'can_run']
+    # for c in check_perm:
+    #     context[c] = request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_{c}")
+
+    vh.get_perms(request, script_list, context)
 
     # when they click run script, call the script with argument
     # write the output to a temp file to display it on screen, delete temp file
@@ -242,10 +259,12 @@ def script_change(request, file_id):
         'script_name': UploadFileModel.objects.get(pk=file_id),
         'filename': UploadFileModel.objects.get(pk=file_id).upload_file.url.split('/')[-1],
         'fileContent': vh.get_file_content(UploadFileModel.objects.get(pk=file_id).upload_file.path),
-        'can_view': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_view"),
-        'can_edit': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_edit"),
-        'can_delete': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_delete"),
+        # 'can_view': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_view"),
+        # 'can_edit': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_edit"),
+        # 'can_delete': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_delete"),
     }
+
+    vh.get_perms(request, script_list, context)
 
     # if pressing no on edit confirmation return back to change page
     # while keeping the edits
@@ -267,8 +286,10 @@ def script_confirm_edit(request, file_id):
         'url': url,
         'script_name': UploadFileModel.objects.get(pk=file_id),
         'filename': url.split('/')[-1],
-        'can_edit': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_edit"),
+        # 'can_edit': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_edit"),
     }
+    vh.get_perms(request, script_list, context)
+
     script_list = ScriptList.objects.get(pk=context['script_name'].script_list_id)
     if request.method == 'POST':
         if request.POST.get("button_edit"):
@@ -301,8 +322,9 @@ def script_confirm_delete(request, file_id):
         'script_name': UploadFileModel.objects.get(pk=file_id),
         'filename': url.split('/')[-1],
         'fileContent': vh.get_file_content(file_path),
-        'can_delete': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_delete"),
+        # 'can_delete': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_delete"),
     }
+    vh.get_perms(request, script_list, context)
 
     script_list = ScriptList.objects.get(pk=context['script_name'].script_list_id)
 
@@ -346,8 +368,8 @@ class Logs(ListView):
         script_log = ScriptList.objects.get(pk=self.kwargs['pk']).scriptlog_set.all()[::-1]
         return script_log
 
-    def dispatch(self, request, *args, **kwargs):
-        return super().dispatch(self.request, *args, **kwargs)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
 
     def get_context_data(self, **kwargs):
         # get all the scriptLog (from get_queryset)

@@ -20,9 +20,11 @@ class AccessCheck(object):
 
     def __call__(self, *args, **kwargs):
         try:
-            print(self.func.__name__)
+            pass
+            #print(self.func.__name__)
         except Exception:
-            print("no name")
+            pass
+            #print("no name")
 
         script_list = get_list(**kwargs)
 
