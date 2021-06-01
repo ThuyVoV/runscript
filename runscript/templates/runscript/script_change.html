@@ -1,13 +1,12 @@
 {% extends "runscript/base.html" %}
 {% block title %}Script Edit Page{% endblock title %}
 {% block content %}
-    <form action="{% url 'runscript:detail' script_name.id %}" method="GET">
-        <input type="submit" value="Back"/>
-    </form>
+
 
     {% if can_view %}
-        script name: {{ script_name }}<br>
-        file name: {{ filename }}
+        <form action="{% url 'runscript:detail' script_name.id %}" method="GET">
+            <input type="submit" value="Back"/>
+        </form>
 
         <!-- not sure why using the function doesn't work but this will do for now -->
         {#    <form action="{% url 'runscript:confirm_edit' script_name.id %}" method="POST">#}
@@ -23,6 +22,8 @@
         {#        <input type="submit" name="button_edit" value="edit"/>#}
         {#    </form><br>#}
         {% if can_edit %}
+            script name: {{ script_name }}<br>
+            file name: {{ filename }}
             <form action="{% url 'runscript:confirm_edit' script_name.id %}" method="POST">
                 {% csrf_token %}
                 <textarea rows="10" cols="50" name="script_edit" id="textbox"
@@ -30,30 +31,32 @@
 
                 <input type="submit" name="button_edit" value="edit"/>
             </form><br>
-        {% endif %}
-        <script>
-            document.getElementById("textbox").addEventListener("keydown", asdf);
-            function asdf(e) {
-                if (e.keyCode === 9) {
-                    e.preventDefault();
-                    let start = this.selectionStart;
-                    let end = this.selectionEnd;
 
-                    // set textarea value to: text before caret + tab + text after caret
-                    this.value = this.value.substring(0, start) +
-                        "\t" + this.value.substring(end);
+            <script>
+                document.getElementById("textbox").addEventListener("keydown", asdf);
 
-                    // put caret at right position again
-                    // if these two dont match it will highlight stuff within the index
-                    this.selectionStart = this.selectionEnd = start + 1;
+                function asdf(e) {
+                    if (e.keyCode === 9) {
+                        e.preventDefault();
+                        let start = this.selectionStart;
+                        let end = this.selectionEnd;
+
+                        // set textarea value to: text before caret + tab + text after caret
+                        this.value = this.value.substring(0, start) +
+                            "\t" + this.value.substring(end);
+
+                        // put caret at right position again
+                        // if these two dont match it will highlight stuff within the index
+                        this.selectionStart = this.selectionEnd = start + 1;
+                    }
                 }
-            }
-        </script>
-        {% if can_delete %}
-            <form action="{% url 'runscript:confirm_delete' script_name.id %}" method="POST">
-                {% csrf_token %}
-                <input type="submit" name="button_delete" value="delete"/>
-            </form><br>
+            </script>
+            {% if can_delete %}
+                <form action="{% url 'runscript:confirm_delete' script_name.id %}" method="POST">
+                    {% csrf_token %}
+                    <input type="submit" name="button_delete" value="delete"/>
+                </form><br>
+            {% endif %}
         {% endif %}
     {% endif %}
 {% endblock content %}

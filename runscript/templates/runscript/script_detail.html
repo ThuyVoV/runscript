@@ -17,7 +17,7 @@
         <pre><code class="python">{% for line in fileContent %}{{ line }}{% endfor %}</code></pre>
 
         <!-- create button to run the script and display it -->
-        {% if can_edit %}
+        {% if can_edit or can_run %}
             {% if can_run %}
                 <form action="{% url 'runscript:detail' script_name.id %}" method="POST">
                     {% csrf_token %}
@@ -27,11 +27,12 @@
                 </form>
             {% endif %}
 
-
+            {% if can_edit %}
                 <form action="{% url 'runscript:change' script_name.id %}" method="POST">
                     {% csrf_token %}
                     <input type="submit" value="Edit this script"/>
                 </form><br>
+                {% endif %}
         {% endif %}
 
         <!-- get the output of the script -->
