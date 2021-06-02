@@ -79,14 +79,7 @@ def view_and_upload(request, list_id):
 
     context = {
         'script_list': script_list,
-        # 'can_manage_user': user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_manage_user"),
-        # 'can_log': user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_log"),
-        # 'can_view': user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_view"),
-        # 'can_add': user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_add")
     }
-    # check_perm = ['can_view', 'can_add', 'can_log', 'can_manage_user']
-    # for c in check_perm:
-    #     context[c] = request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_{c}")
 
     vh.get_perms(request, script_list, context)
 
@@ -116,13 +109,7 @@ def manage_user(request, list_id):
     check_perm = ['can_log', 'can_manage_user', 'can_mange_perm']
     context = {
         'script_list': script_list,
-        # 'can_manage_user': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_manage_user"),
-        # 'can_manage_perm': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_manage_perm"),
-        # 'can_log': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_log"),
     }
-    # check_perm = ['can_log', 'can_manage_user', 'can_mange_perm']
-    # for c in check_perm:
-    #     context[c] = request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_{c}")
     vh.get_perms(request, script_list, context)
 
     perm_attributes = [
@@ -214,14 +201,8 @@ def script_detail(request, file_id):
     output = []
     context = {
         'script_name': UploadFileModel.objects.get(pk=file_id),
-        # 'can_view': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_view"),
-        # 'can_run': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_run"),
-        # 'can_edit': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_edit")
-    }
 
-    # check_perm = ['can_view', 'can_edit', 'can_run']
-    # for c in check_perm:
-    #     context[c] = request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_{c}")
+    }
 
     vh.get_perms(request, script_list, context)
 
@@ -257,9 +238,6 @@ def script_change(request, file_id):
         'script_name': UploadFileModel.objects.get(pk=file_id),
         'filename': UploadFileModel.objects.get(pk=file_id).upload_file.url.split('/')[-1],
         'fileContent': vh.get_file_content(UploadFileModel.objects.get(pk=file_id).upload_file.path),
-        # 'can_view': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_view"),
-        # 'can_edit': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_edit"),
-        # 'can_delete': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_delete"),
     }
 
     vh.get_perms(request, script_list, context)
@@ -284,7 +262,6 @@ def script_confirm_edit(request, file_id):
         'url': url,
         'script_name': UploadFileModel.objects.get(pk=file_id),
         'filename': url.split('/')[-1],
-        # 'can_edit': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_edit"),
     }
     vh.get_perms(request, script_list, context)
 
@@ -320,7 +297,6 @@ def script_confirm_delete(request, file_id):
         'script_name': UploadFileModel.objects.get(pk=file_id),
         'filename': url.split('/')[-1],
         'fileContent': vh.get_file_content(file_path),
-        # 'can_delete': request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_delete"),
     }
     vh.get_perms(request, script_list, context)
 
@@ -344,7 +320,6 @@ def logs(request, list_id):
     script_list = ScriptList.objects.get(pk=list_id)
 
     context = {
-        #'logs': zip(script_list.scriptlog_set.all()[::-1], users)
         'logs': script_list.scriptlog_set.all()[::-1],
         'pk': list_id,
         'is_paginated': True
@@ -352,7 +327,8 @@ def logs(request, list_id):
 
     vh.get_perms(request, script_list, context)
 
-    paginator = Paginator(context['logs'], 5)
+    display_amt = 10
+    paginator = Paginator(context['logs'], display_amt)
     page_num = request.GET.get("page")
 
     try:

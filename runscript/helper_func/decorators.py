@@ -25,6 +25,7 @@ class AccessCheck(object):
         if args[0].user not in script_list.user.all():
             return redirect('runscript:main')
 
+        # specific functions needs a minimum of certain permission
         try:
             user = args[0].user
             fun = self.func.__name__
