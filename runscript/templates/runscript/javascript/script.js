@@ -5,8 +5,9 @@ if (document.readyState === 'loading') {
 }
 
 function ready() {
-    document.getElementById("textbox").addEventListener("keydown", makeTab);
+
     FilterLog()
+    document.getElementById("textbox").addEventListener("keydown", makeTab);
     console.log("hey im ready new change")
 }
 
