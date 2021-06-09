@@ -1,38 +1,42 @@
-// if (document.readyState === 'loading') {
-//     document.addEventListener('DOMContentLoaded', ready)
-// } else {
-//     ready()
-// }
-//
-// function ready() {
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', ready)
+} else {
+    ready()
+}
+
+function ready() {
     console.log("hey im ready new change new herea")
     FilterLog()
     MakeTab()
-    // ajaxtest()
-// }
+    AjaxTest()
+}
 
-// function ajaxtest(){
-ajaxtest = document.getElementById("ajaxtest")
+function AjaxTest(){
+    let ajaxtest = document.getElementById("ajaxtest")
 
-$.ajax({
-    type: 'GET',
-    url: '/runscript/haha/',
-    success: function(response){
-        console.log('success', response.user)
+    $.ajax({
+        type: 'GET',
+        url: '/runscript/haha/',
+        data: {
+            "forreal": "this is just a test",
+            "nextnext": "this is a second test",
+        },
+        success: function(response){
+            console.log('success', response.user)
 
-        const data = response.user
-        console.log(data)
-        data.forEach(el=>{
-            ajaxtest.innerHTML += `
-                ${el}
-            `
-        })
-    },
-    error: function (error) {
-        console.log('error',error)
-    }
-})
-// }
+            const data = response.user
+            console.log(data)
+            data.forEach( user =>{
+                ajaxtest.innerHTML += `
+                    ${user.user} - ${user.id}
+                `
+            })
+        },
+        error: function (error) {
+            console.log('error',error)
+        }
+    })
+}
 
 function FilterLog() {
     $("#myInput").on("keyup", function () {

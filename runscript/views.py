@@ -388,6 +388,15 @@ def ajax_test(request):
 
     user = []
     for u in users:
-        user.append(u.username)
+        item = {
+            'user': u.username,
+            'id': u.id
+        }
+        user.append(item)
 
+    print(request.GET.get("forreal"))
+    print(request.GET.get("nextnext"))
+
+    if request.is_ajax():
+        print("VERY COOL THIS IS AJAX")
     return JsonResponse({'user': user})
