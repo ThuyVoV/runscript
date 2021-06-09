@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
+from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, redirect
 from django.utils.decorators import method_decorator
 from django.views.generic.list import ListView
@@ -379,3 +380,14 @@ class Logs(ListView):
         context['can_log'] = user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_log")
 
         return context
+
+
+def ajax_test(request):
+    print("hi")
+    users = User.objects.all()
+
+    user = []
+    for u in users:
+        user.append(u.username)
+
+    return JsonResponse({'user': user})

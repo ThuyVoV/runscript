@@ -1,15 +1,38 @@
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', ready)
-} else {
-    ready()
-}
-
-function ready() {
-
+// if (document.readyState === 'loading') {
+//     document.addEventListener('DOMContentLoaded', ready)
+// } else {
+//     ready()
+// }
+//
+// function ready() {
+    console.log("hey im ready new change new herea")
     FilterLog()
-    document.getElementById("textbox").addEventListener("keydown", makeTab);
-    console.log("hey im ready new change")
-}
+    MakeTab()
+    // ajaxtest()
+// }
+
+// function ajaxtest(){
+ajaxtest = document.getElementById("ajaxtest")
+
+$.ajax({
+    type: 'GET',
+    url: '/runscript/haha/',
+    success: function(response){
+        console.log('success', response.user)
+
+        const data = response.user
+        console.log(data)
+        data.forEach(el=>{
+            ajaxtest.innerHTML += `
+                ${el}
+            `
+        })
+    },
+    error: function (error) {
+        console.log('error',error)
+    }
+})
+// }
 
 function FilterLog() {
     $("#myInput").on("keyup", function () {
@@ -20,10 +43,10 @@ function FilterLog() {
     });
 }
 
-function makeTab(event) {
-
-    if (event.keyCode === 9) {
-        event.preventDefault();
+function MakeTab(){
+    $("#textbox").on("keydown", function (e) {
+        if (e.keyCode === 9) {
+        e.preventDefault();
         let start = this.selectionStart;
         let end = this.selectionEnd;
 
@@ -33,9 +56,9 @@ function makeTab(event) {
         // put caret at right position again
         // if these two dont match it will highlight stuff within the index
         this.selectionStart = this.selectionEnd = start + 1;
-    }
+        }
+    })
 }
-
 
 // function myFunction() {
 //     var input, filter, table, tr, td, cell, i, j;
