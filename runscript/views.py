@@ -140,7 +140,7 @@ def manage_user(request, list_id):
         # DELETE USER
         elif request.POST.get("button_del_user"):
             if request.POST.get('selected_user') == "Select User":
-                messages.info(request, "No changes were made AA")
+                messages.info(request, "No changes were made")
                 return render(request, 'runscript/manage_user.html', context)
 
             del_user = request.POST.get('selected_user')
@@ -160,7 +160,7 @@ def manage_user(request, list_id):
         elif request.POST.get("button_change_perm"):
 
             if request.POST.get('selected_user') == "Select User":
-                messages.info(request, "No changes were madeBB")
+                messages.info(request, "No changes were made")
                 return render(request, 'runscript/manage_user.html', context)
 
             user = User.objects.get(username=request.POST.get("selected_user"))
@@ -189,6 +189,7 @@ def manage_user(request, list_id):
             for p in perm_attributes:
                 has_perm.append(user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_{p}"))
 
+            # boolean to display the permissions once a user is selected
             context['perm'] = zip(has_perm, perm_attributes)
             context['selected_user'] = user
 
