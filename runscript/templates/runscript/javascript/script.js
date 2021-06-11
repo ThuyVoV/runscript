@@ -12,25 +12,41 @@ function ready() {
 }
 
 function AjaxTest(){
+    let su = document.getElementById("select_user")
+    let user = document.getElementById("btn_select_user")
     let ajaxtest = document.getElementById("ajaxtest")
+    let hehe = document.getElementsByTagName("form")[0].getAttribute("action")
+
+    // console.log("ajax", su.value)
+    // console.log("btn", user)
+    console.log("this is hehe", hehe)
+//user.children("option").filter(":selected").text()
+
+    user.addEventListener("click", e => {
+        e.preventDefault()
+        ajaxtest.classList.remove("novis")
+        ajaxtest.innerText = su.value
+    })
 
     $.ajax({
         type: 'GET',
-        url: '/runscript/haha/',
+        //url: '/runscript/haha/',
+        url: "",
         data: {
             "forreal": "this is just a test",
             "nextnext": "this is a second test",
+            "selected": su.value,
         },
         success: function(response){
-            console.log('success', response.user)
+            console.log('success', response.notuser)
 
-            const data = response.user
-            console.log(data)
-            data.forEach( user =>{
-                ajaxtest.innerHTML += `
-                    ${user.user} - ${user.id}
-                `
-            })
+            //const data = response.user
+            //console.log(data)
+            // data.forEach( user =>{
+            //     ajaxtest.innerHTML += `
+            //         ${user.user} - ${user.id}
+            //     `
+            // })
         },
         error: function (error) {
             console.log('error',error)

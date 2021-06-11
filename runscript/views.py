@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.utils.decorators import method_decorator
 from django.views.generic.list import ListView
@@ -107,7 +107,6 @@ def view_and_upload(request, list_id):
 @AccessCheck
 def manage_user(request, list_id):
     script_list = ScriptList.objects.get(pk=list_id)
-    check_perm = ['can_log', 'can_manage_user', 'can_mange_perm']
     context = {
         'script_list': script_list,
     }
@@ -192,6 +191,11 @@ def manage_user(request, list_id):
             # boolean to display the permissions once a user is selected
             context['perm'] = zip(has_perm, perm_attributes)
             context['selected_user'] = user
+
+    if request.is_ajax():
+        print("in manage", request.GET.get("selected"))
+
+        return JsonResponse({'notuser': "very cool dude"})
 
     return render(request, 'runscript/manage_user.html', context)
 
@@ -384,20 +388,16 @@ class Logs(ListView):
 
 
 def ajax_test(request):
-    print("hi")
-    users = User.objects.all()
-
-    user = []
-    for u in users:
-        item = {
-            'user': u.username,
-            'id': u.id
-        }
-        user.append(item)
+    perm_attributes = [
+        'view', 'add', 'edit', 'run', 'delete',
+        'log', 'manage_user', 'manage_perm'
+    ]
 
     print(request.GET.get("forreal"))
     print(request.GET.get("nextnext"))
 
     if request.is_ajax():
         print("VERY COOL THIS IS AJAX")
-    return JsonResponse({'user': user})
+        print("this user was selected:", request.GET.get("selected"))
+
+    return JsonResponse({'notuser': perm_attributes})

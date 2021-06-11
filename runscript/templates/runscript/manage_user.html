@@ -3,7 +3,7 @@
 {% block content %}
     {% if can_manage_user %}
         <div class="container-fluid">
-            <form action="{% url 'runscript:view_and_upload' script_list.id %}" method="get">
+            <form id="hehe" action="{% url 'runscript:view_and_upload' script_list.id %}" method="get">
                 <input type="submit" value="Back to View">
             </form>
 
@@ -15,24 +15,24 @@
                 <input type="submit" class="btn btn-primary" value="Add User" name="button_add_user"/>
 
                 <!-- USER SELECTION -->
-                <select name="selected_user">
+                <select id="select_user" name="selected_user">
                     {% if selected_user %} <!-- USER SELECTED -->
-                        <option value="{{ selected_user }}">{{ selected_user }}</option>
+                        <option id="select_{{ selected_user }}"value="{{ selected_user }}">{{ selected_user }}</option>
                         {% for users in script_list.user.all %}
                             {% if users|slugify != script_list.owner|slugify and users != selected_user and user != users %}
-                                <option value="{{ users }}">{{ users }}</option>
+                                <option id="select_{{ users }}" value="{{ users }}">{{ users }}</option>
                             {% endif %}
                         {% endfor %}
                     {% else %} <!-- USER SELECTION DEFAULT -->
                         <option value="Select User">Select User</option>
                         {% for users in script_list.user.all %}
                             {% if users|slugify != script_list.owner|slugify and user != users %}
-                                <option value="{{ users }}">{{ users }}</option>
+                                <option id="select_{{ users }}" value="{{ users }}">{{ users }}</option>
                             {% endif %}
                         {% endfor %}
                     {% endif %}
                 </select>
-                <input type="submit" class="btn btn-primary" value="Select User" name="button_select_user"/><br>
+                <input type="submit" id="btn_select_user" class="btn btn-primary" value="Select User" name="button_select_user"/><br>
 
                 <!-- PERMISSIONS -->
                 {% if can_manage_perm %}
@@ -62,4 +62,6 @@
             {% endfor %}
         </div>
     {% endif %}
+
+    <div id="ajaxtest" class="novis">hehehuu</div>
 {% endblock content %}

@@ -24,6 +24,10 @@
         tr:nth-child(even) {
             background-color: #dddddd;
         }
+
+        .novis {
+            visibility: hidden;
+        }
     </style>
 
     <title>{% block title %}{% endblock title %}</title>
@@ -50,7 +54,8 @@
     {{ user }}
     </span>
 
-    <div id="ajaxtest"></div>
+    <div id="ajaxtests"></div>
+
     <hr>
 
     {% block content %}{% endblock content %}
