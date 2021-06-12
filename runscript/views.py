@@ -180,22 +180,50 @@ def manage_user(request, list_id):
 
         # USER SELECTION
         elif request.POST.get("button_select_user"):
-            if request.POST.get("selected_user") == "Select User":
-                return render(request, 'runscript/manage_user.html', context)
-
-            user = User.objects.get(username=request.POST.get("selected_user"))
-            has_perm = []
-            for p in perm_attributes:
-                has_perm.append(user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_{p}"))
-
-            # boolean to display the permissions once a user is selected
-            context['perm'] = zip(has_perm, perm_attributes)
-            context['selected_user'] = user
+            pass
+            # if request.POST.get("selected_user") == "Select User":
+            #     return render(request, 'runscript/manage_user.html', context)
+            #
+            # user = User.objects.get(username=request.POST.get("selected_user"))
+            # has_perm = []
+            # for p in perm_attributes:
+            #     has_perm.append(user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_{p}"))
+            #
+            # # boolean to display the permissions once a user is selected
+            # context['perm'] = zip(has_perm, perm_attributes)
+            # context['selected_user'] = user
 
     if request.is_ajax():
-        print("in manage", request.GET.get("selected"))
+        print("im in manage ajax")
+        # if request.GET.get("selected_user") == "Select User":
+        #     print('ok whatver')
+        #     dad = ["hehe", 'ok', 'yay']
+        #     #return render(request, 'runscript/manage_user.html', context)
+        #     return JsonResponse({"data": dad})
 
-        return JsonResponse({'notuser': "very cool dude"})
+
+        users=[]
+        for u in script_list.user.all():
+            users.append(str(u))
+        context['script_list'] = {
+            'user': users,
+            'list_name': script_list.list_name,
+            'owner': script_list.owner
+        }
+
+        user = User.objects.get(username=request.GET.get("selected_user"))
+        has_perm = []
+        for p in perm_attributes:
+            has_perm.append(user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_{p}"))
+
+        # boolean to display the permissions once a user is selected
+        # context['perm'] = zip(has_perm, perm_attributes)
+        # context['selected_user'] = user
+        #context['has_perm'] = has_perm
+        context['perm_attributes'] = perm_attributes
+
+
+        return JsonResponse(context)
 
     return render(request, 'runscript/manage_user.html', context)
 

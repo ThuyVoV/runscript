@@ -1,4 +1,8 @@
 {% extends "runscript/base.html" %}
+{% load static %}
+{% block script %}
+    <script type="text/javascript" src="{% static "javascript/manage_user.js" %}" async></script>
+{% endblock script %}
 {% block title %}Mange Users{% endblock title %}
 {% block content %}
     {% if can_manage_user %}
@@ -24,7 +28,7 @@
                             {% endif %}
                         {% endfor %}
                     {% else %} <!-- USER SELECTION DEFAULT -->
-                        <option value="Select User">Select User</option>
+{#                        <option value="Select User">Select User</option>#}
                         {% for users in script_list.user.all %}
                             {% if users|slugify != script_list.owner|slugify and user != users %}
                                 <option id="select_{{ users }}" value="{{ users }}">{{ users }}</option>
@@ -63,5 +67,5 @@
         </div>
     {% endif %}
 
-    <div id="ajaxtest" class="novis">hehehuu</div>
+    <div id="ajaxtest" class="haha">hehehuu</div>
 {% endblock content %}

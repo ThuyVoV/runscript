@@ -1,4 +1,8 @@
 {% extends "runscript/base.html" %}
+{% load static %}
+{% block script %}
+    <script type="text/javascript" src="{% static "javascript/script_change.js" %}" async></script>
+{% endblock script %}
 {% block title %}Script Edit Page{% endblock title %}
 {% block content %}
 
