@@ -180,18 +180,18 @@ def manage_user(request, list_id):
 
         # USER SELECTION
         elif request.POST.get("button_select_user"):
-            pass
-            # if request.POST.get("selected_user") == "Select User":
-            #     return render(request, 'runscript/manage_user.html', context)
-            #
-            # user = User.objects.get(username=request.POST.get("selected_user"))
-            # has_perm = []
-            # for p in perm_attributes:
-            #     has_perm.append(user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_{p}"))
-            #
-            # # boolean to display the permissions once a user is selected
-            # context['perm'] = zip(has_perm, perm_attributes)
-            # context['selected_user'] = user
+
+            if request.POST.get("selected_user") == "Select User":
+                return render(request, 'runscript/manage_user.html', context)
+
+            user = User.objects.get(username=request.POST.get("selected_user"))
+            has_perm = []
+            for p in perm_attributes:
+                has_perm.append(user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_{p}"))
+
+            # boolean to display the permissions once a user is selected
+            context['perm'] = zip(has_perm, perm_attributes)
+            context['selected_user'] = user
 
     if request.is_ajax():
         print("im in manage ajax")
@@ -292,23 +292,42 @@ def script_change(request, file_id):
 def script_confirm_edit(request, file_id):
     url, file_path = vh.get_paths(file_id)
     script_list = vh.get_list(file_id=file_id)
+    upload = UploadFileModel.objects.get(pk=file_id)
     context = {
         'url': url,
-        'script_name': UploadFileModel.objects.get(pk=file_id),
+        'script_name': upload,
         'filename': url.split('/')[-1],
     }
     vh.get_perms(request, script_list, context)
 
-    script_list = ScriptList.objects.get(pk=context['script_name'].script_list_id)
     if request.method == 'POST':
         if request.POST.get("button_edit"):
+            print("file name is:", request.POST.get("file_name"))
+            # print("list", script_list)
+            # print("filename", url.split('/')[-1])
+            # print("ext", url.split('/')[-1].split('.')[-1])
+
+            request.session['newfilename'] = request.POST.get("file_name")
             vh.write_to_file(request.POST.get('script_edit'), vh.get_temp())
             context['fileContent'] = vh.get_file_content(vh.get_temp())
 
             return render(request, 'runscript/script_confirm_edit.html', context)
 
         if request.POST.get("button_edit_yes"):
-            url, file_path = vh.get_paths(file_id)
+            ahh = request.session.get('newfilename')
+            print('newfilename is:', ahh)
+            print('filepad:', file_path)
+            eh = file_path.split('/')
+            print('eh', eh)
+            eh[-1] = ahh
+            print('newpathlist', eh)
+            eh = '/'.join(eh)
+            print('newpath', eh)
+            with open(eh, 'w') as ha:
+                ha.write("testthing")
+            ha.close()
+
+            #url, file_path = vh.get_paths(file_id)
             temp = open(vh.get_temp(), 'r')
             vh.write_to_file(temp, file_path)
             temp.close()

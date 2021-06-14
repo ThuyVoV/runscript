@@ -12,14 +12,15 @@
             <input type="submit" value="Back"/>
         </form>
 
-
         {% if can_edit %}
-            script name: {{ script_name }}<br>
-            file name: {{ filename }}
+
             <form action="{% url 'runscript:confirm_edit' script_name.id %}" method="POST">
                 {% csrf_token %}
-                <textarea rows="10" cols="50" name="script_edit" id="textbox">{% for line in fileContent %}{{ line }}{% endfor %}</textarea><br>
-
+                script name: {{ script_name }}<br>
+                file name: <input type="text" name="file_name" placeholder="{{ filename }}">
+                <div>
+                    <textarea rows="10" cols="50" name="script_edit" id="textbox">{% for line in fileContent %}{{ line }}{% endfor %}</textarea><br>
+                </div>
                 <input type="submit" name="button_edit" value="edit"/>
             </form><br>
 

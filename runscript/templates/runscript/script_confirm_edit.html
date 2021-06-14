@@ -3,16 +3,17 @@
 
 {% block content %}
     <form action="{% url 'runscript:change' script_name.id %}" method="get">
-        <input type="submit" value="Cancel" />
+        <input type="submit" value="Cancel"/>
     </form>
     the url is {{ url }} <br>
     the file is {{ filename }} <br>
     Are you sure you want to edit this script?
+
     {% if can_edit %}
-    <form action="{% url 'runscript:confirm_edit' script_name.id %}" method="POST">
-        {% csrf_token %}
-        <input type="submit" name="button_edit_yes" value="yes"/>
-    </form>
+        <form action="{% url 'runscript:confirm_edit' script_name.id %}" method="POST">
+            {% csrf_token %}
+            <input type="submit" name="button_edit_yes" value="yes"/>
+        </form>
     {% endif %}
 
     <form action="{% url 'runscript:change' script_name.id %}" method="POST">
