@@ -235,7 +235,6 @@ def script_detail(request, file_id):
     output = []
     context = {
         'script_name': UploadFileModel.objects.get(pk=file_id),
-
     }
 
     vh.get_perms(request, script_list, context)
@@ -300,32 +299,57 @@ def script_confirm_edit(request, file_id):
     }
     vh.get_perms(request, script_list, context)
 
+    print('url0:', url)
+    print('fp0:', file_path)
+
     if request.method == 'POST':
         if request.POST.get("button_edit"):
-            print("file name is:", request.POST.get("file_name"))
-            # print("list", script_list)
-            # print("filename", url.split('/')[-1])
-            # print("ext", url.split('/')[-1].split('.')[-1])
 
-            request.session['newfilename'] = request.POST.get("file_name")
+            request.session['new_file_name'] = request.POST.get("new_file_name")
+            request.session['new_script_name'] = request.POST.get("new_script_name")
             vh.write_to_file(request.POST.get('script_edit'), vh.get_temp())
             context['fileContent'] = vh.get_file_content(vh.get_temp())
 
             return render(request, 'runscript/script_confirm_edit.html', context)
 
         if request.POST.get("button_edit_yes"):
-            ahh = request.session.get('newfilename')
-            print('newfilename is:', ahh)
-            print('filepad:', file_path)
-            eh = file_path.split('/')
-            print('eh', eh)
-            eh[-1] = ahh
-            print('newpathlist', eh)
-            eh = '/'.join(eh)
-            print('newpath', eh)
-            with open(eh, 'w') as ha:
-                ha.write("testthing")
-            ha.close()
+            if request.session.get('new_script_name') != '':
+                new_script_name = request.session.get('new_script_name')
+                upload.script_name = new_script_name
+                upload.save()
+
+                try:
+                    del request.session['newscriptname']
+                except KeyError:
+                    pass
+
+            if request.session.get('new_file_name') != '':
+                new_file_name = request.session.get('new_file_name')
+                # get original extension and filepath
+                ext = url.split('.')[-1]
+
+                # get new file name then add on original extension
+                new_file_name = new_file_name.split('.')[0] + '.' + ext
+
+                # split original file path, and replace the last element with new file name, joins them all
+                new_file_path = url.split('/')
+                new_file_path[-1] = new_file_name
+                new_file_path = '/'.join(new_file_path)
+
+                # remove first character from the string '/'
+                # update the filepath with new file name
+                url = new_file_path[1:]
+                file_path = file_path.split('/')
+                file_path[-1] = new_file_name
+                file_path = '/'.join(file_path)
+
+                upload.upload_file = url
+                upload.save()
+
+                try:
+                    del request.session['new_file_name']
+                except KeyError:
+                    pass
 
             #url, file_path = vh.get_paths(file_id)
             temp = open(vh.get_temp(), 'r')
