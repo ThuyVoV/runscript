@@ -180,18 +180,18 @@ def manage_user(request, list_id):
 
         # USER SELECTION
         elif request.POST.get("button_select_user"):
-
-            if request.POST.get("selected_user") == "Select User":
-                return render(request, 'runscript/manage_user.html', context)
-
-            user = User.objects.get(username=request.POST.get("selected_user"))
-            has_perm = []
-            for p in perm_attributes:
-                has_perm.append(user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_{p}"))
-
-            # boolean to display the permissions once a user is selected
-            context['perm'] = zip(has_perm, perm_attributes)
-            context['selected_user'] = user
+            pass
+            # if request.POST.get("selected_user") == "Select User":
+            #     return render(request, 'runscript/manage_user.html', context)
+            #
+            # user = User.objects.get(username=request.POST.get("selected_user"))
+            # has_perm = []
+            # for p in perm_attributes:
+            #     has_perm.append(user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_{p}"))
+            #
+            # # boolean to display the permissions once a user is selected
+            # context['perm'] = zip(has_perm, perm_attributes)
+            # context['selected_user'] = user
 
     if request.is_ajax():
         print("im in manage ajax")
@@ -220,10 +220,16 @@ def manage_user(request, list_id):
         # context['perm'] = zip(has_perm, perm_attributes)
         # context['selected_user'] = user
         #context['has_perm'] = has_perm
+        check_perm = []
         context['perm_attributes'] = perm_attributes
 
+        for p in perm_attributes:
+            check_perm.append(context[f'can_{p}'])
+        context['check_perm'] = check_perm
 
         return JsonResponse(context)
+
+    print(context)
 
     return render(request, 'runscript/manage_user.html', context)
 
@@ -299,9 +305,6 @@ def script_confirm_edit(request, file_id):
     }
     vh.get_perms(request, script_list, context)
 
-    print('url0:', url)
-    print('fp0:', file_path)
-
     if request.method == 'POST':
         if request.POST.get("button_edit"):
 
@@ -351,7 +354,6 @@ def script_confirm_edit(request, file_id):
                 except KeyError:
                     pass
 
-            #url, file_path = vh.get_paths(file_id)
             temp = open(vh.get_temp(), 'r')
             vh.write_to_file(temp, file_path)
             temp.close()
