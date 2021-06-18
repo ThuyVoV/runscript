@@ -15,35 +15,98 @@ console.log("doing whatever")
 //
 // })
 
-$.ajax({
-    type: 'GET',
-    url: "",
-    data: {
-        "selected_user": su.value,
-    },
-    success: function (response) {
-        console.log('success', response.can_view)
-        console.log("script_list", response.script_list)
-        console.log('check perm', response.check_perm)
-        console.log('perm atr', response.perm_attributes[0])
-        console.log('perm atr', response.perm_attributes[2])
-        const data = response.perm_attributes
 
-        user.addEventListener("click", e => {
-            e.preventDefault()
+    // $.ajax({
+    //     type: 'GET',
+    //     url: "",
+    //     data: {
+    //         "selected_user": su.value,
+    //     },
+    //     success: function (response) {
+    //         console.log('success', response)
+    //         console.log("script_list", response.script_list)
+    //         console.log('check perm', response.check_perm)
+    //         console.log('perm atr', response.perm_attributes)
+    //
+    //         // const data = response.perm_attributes
+    //         console.log(response.check_perm.length)
+    //         console.log(response.perm_attributes.length)
+    //         perm = response.check_perm
+    //         attr = response.perm_attributes
+    //         user.addEventListener("click", e => {
+    //             su = document.getElementById("select_user")
+    //             console.log(su.value)
+    //             e.preventDefault()
+    //             ajaxtest.classList.remove("novis")
+    //             console.log("clicked bbutton")
+    //
+    //             ajaxtest.innerText = ``
+    //
+    //             for (let i = 0; i < response.check_perm.length; i++) {
+    //                 if (perm[i]) {
+    //                     ajaxtest.innerHTML +=
+    //                         `<label>
+    //                     <input class="form-check-inline" type="checkbox" name="${attr[i]}" value="clicked" checked> ${attr[i]}
+    //                     </label>`
+    //                 } else {
+    //                     ajaxtest.innerHTML +=
+    //                         `<label>
+    //                     <input class="form-check-inline" type="checkbox" name="${attr[i]}" value="clicked" >${attr[i]}
+    //                     </label>`
+    //                 }
+    //             }
+    //         })
+    //
+    //     },
+    //     error: function (error) {
+    //         console.log('error', error)
+    //     }
+    // })
+
+user.addEventListener("click", e => {
+    e.preventDefault()
+
+    $.ajax({
+        type: 'GET',
+        url: "",
+        data: {
+            "selected_user": su.value,
+        },
+        success: function (response) {
+            console.log('success', response)
+            console.log("script_list", response.script_list)
+            console.log('check perm', response.check_perm)
+            console.log('perm atr', response.perm_attributes)
+
+            perm = response.check_perm
+            attr = response.perm_attributes
+            // user.addEventListener("click", e => {
+            su = document.getElementById("select_user")
+            console.log("su.value",su.value)
+
             ajaxtest.classList.remove("novis")
             console.log("clicked bbutton")
-            data.forEach( el =>{
-                // ajaxtest.innerHTML += `
-                //     ${el}
-                // `
 
-            })
+            ajaxtest.innerText = ``
 
-        })
+            for (let i = 0; i < response.check_perm.length; i++) {
+                if (perm[i]) {
+                    ajaxtest.innerHTML +=
+                        `<label>
+                    <input class="form-check-inline" type="checkbox" name="${attr[i]}" value="clicked" checked> ${attr[i]}
+                    </label>`
+                } else {
+                    ajaxtest.innerHTML +=
+                        `<label>
+                    <input class="form-check-inline" type="checkbox" name="${attr[i]}" value="clicked" >${attr[i]}
+                    </label>`
+                }
+            }
+            // })
 
-    },
-    error: function (error) {
-        console.log('error', error)
-    }
+        },
+        error: function (error) {
+            console.log('error', error)
+        }
+    })
 })

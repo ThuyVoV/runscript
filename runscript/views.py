@@ -212,19 +212,19 @@ def manage_user(request, list_id):
         }
 
         user = User.objects.get(username=request.GET.get("selected_user"))
-        has_perm = []
+        check_perm = []
         for p in perm_attributes:
-            has_perm.append(user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_{p}"))
+            check_perm.append(user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_{p}"))
 
         # boolean to display the permissions once a user is selected
         # context['perm'] = zip(has_perm, perm_attributes)
         # context['selected_user'] = user
         #context['has_perm'] = has_perm
-        check_perm = []
+
         context['perm_attributes'] = perm_attributes
 
-        for p in perm_attributes:
-            check_perm.append(context[f'can_{p}'])
+        # for p in perm_attributes:
+        #     check_perm.append(context[f'can_{p}'])
         context['check_perm'] = check_perm
 
         return JsonResponse(context)
