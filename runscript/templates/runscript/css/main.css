@@ -18,6 +18,6 @@ tr:nth-child(3n+2) {
 }
 
 .novis {
-    visibility: hidden;
+    display: none;
 }
 

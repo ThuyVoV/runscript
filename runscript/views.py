@@ -194,42 +194,63 @@ def manage_user(request, list_id):
             # context['selected_user'] = user
 
     if request.is_ajax():
-        print("im in manage ajax")
-        # if request.GET.get("selected_user") == "Select User":
-        #     print('ok whatver')
-        #     dad = ["hehe", 'ok', 'yay']
-        #     #return render(request, 'runscript/manage_user.html', context)
-        #     return JsonResponse({"data": dad})
+        if request.GET.get("pressed") == 'select':
+            print("select clicked", request.GET.get("pressed"))
+            # if request.GET.get("selected_user") == "Select User":
+            #     print('ok whatver')
+            #     dad = ["hehe", 'ok', 'yay']
+            #     #return render(request, 'runscript/manage_user.html', context)
+            #     return JsonResponse({"data": dad})
 
 
-        users=[]
-        for u in script_list.user.all():
-            users.append(str(u))
-        context['script_list'] = {
-            'user': users,
-            'list_name': script_list.list_name,
-            'owner': script_list.owner
-        }
+            users=[]
+            for u in script_list.user.all():
+                users.append(str(u))
+            context['script_list'] = {
+                'user': users,
+                'list_name': script_list.list_name,
+                'owner': script_list.owner
+            }
 
-        user = User.objects.get(username=request.GET.get("selected_user"))
-        check_perm = []
-        for p in perm_attributes:
-            check_perm.append(user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_{p}"))
+            user = User.objects.get(username=request.GET.get("selected_user"))
+            check_perm = []
+            for p in perm_attributes:
+                check_perm.append(user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_{p}"))
 
-        # boolean to display the permissions once a user is selected
-        # context['perm'] = zip(has_perm, perm_attributes)
-        # context['selected_user'] = user
-        #context['has_perm'] = has_perm
+            # boolean to display the permissions once a user is selected
+            # context['perm'] = zip(has_perm, perm_attributes)
+            # context['selected_user'] = user
+            #context['has_perm'] = has_perm
 
-        context['perm_attributes'] = perm_attributes
+            context['perm_attributes'] = perm_attributes
 
-        # for p in perm_attributes:
-        #     check_perm.append(context[f'can_{p}'])
-        context['check_perm'] = check_perm
+            # for p in perm_attributes:
+            #     check_perm.append(context[f'can_{p}'])
+            context['check_perm'] = check_perm
 
-        return JsonResponse(context)
+            return JsonResponse(context)
 
-    print(context)
+        if request.POST.get('pressed') == 'perm':
+            print("perm clicked", request.POST.get('pressed'))
+            print("user selected", request.POST.get("selected_user"))
+            context['script_list'] ="hah"
+
+            perm_list = request.POST.getlist('perm_list[]')
+            print("permlist", perm_list)
+
+            for b, p in zip(perm_list, perm_attributes):
+                if b == 'true':
+                    print(f"add {p}")
+                else:
+                    print(f"remove {p}")
+
+            return JsonResponse(context)
+
+        if request.POST.get('pressed') == 'delete':
+            print("del clicked", request.POST.get('pressed'))
+            print("user selected", request.POST.get("selected_user"))
+            context['script_list'] = "hah"
+            return JsonResponse(context)
 
     return render(request, 'runscript/manage_user.html', context)
 
