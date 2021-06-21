@@ -91,6 +91,7 @@ btn_change_perm.addEventListener("click", e =>{
         },
         success: function (response) {
             console.log("success")
+            console.log("this is the messages", response.message)
         },
         error: function (error) {
             console.log('error', error)

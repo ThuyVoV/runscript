@@ -3,7 +3,7 @@
 {% block script %}
     <script type="text/javascript" src="{% static "javascript/manage_user.js" %}" async></script>
 {% endblock script %}
-{% block title %}Mange Users{% endblock title %}
+{% block title %}Manage Users{% endblock title %}
 {% block content %}
     {% if can_manage_user %}
         <div class="container-fluid">
@@ -39,31 +39,31 @@
                 <input type="submit" id="btn_select_user" class="btn btn-primary" value="Select User" name="button_select_user"/><br>
 
                 <!-- PERMISSIONS -->
-{#                {% if can_manage_perm %}#}
-{#                    {% if perm %}#}
-{#                        <div class="container-fluid pt-4">#}
-{#                        {% for p in perm %}#}
-{#                            <div class="form-check-inline">#}
-{#                                {% if p.0 %}#}
-{#                                    <label class="form-check-label">#}
-{#                                        <input class="form-check-inline" type="checkbox" name="{{ p.1 }}" value="clicked" checked> {{ p.1 }}#}
-{#                                    </label>#}
-{#                                {% else %}#}
-{#                                    <label class="form-check-label">#}
-{#                                        <input class="form-check-inline" type="checkbox" name="{{ p.1 }}" value="clicked"> {{ p.1 }}#}
-{#                                    </label>#}
-{#                                {% endif %}#}
-{#                            </div>#}
-{#                        {% endfor %}#}
-{#                        <input type="submit" class="btn btn-info" value="change permissions" name="button_change_perm">#}
-{#                        <input type="submit" class="btn btn-danger" value="Delete User" name="button_del_user"/>#}
-{#                    {% endif %}#}
-{#                {% endif %}#}
+                {% if can_manage_perm %}
+                    {% if perm %}
+                        <div class="container-fluid pt-4">
+                        {% for p in perm %}
+                            <div class="form-check-inline">
+                                {% if p.0 %}
+                                    <label class="form-check-label">
+                                        <input class="form-check-inline" type="checkbox" name="{{ p.1 }}" value="clicked" checked> {{ p.1 }}
+                                    </label>
+                                {% else %}
+                                    <label class="form-check-label">
+                                        <input class="form-check-inline" type="checkbox" name="{{ p.1 }}" value="clicked"> {{ p.1 }}
+                                    </label>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                        <input type="submit" class="btn btn-info" value="change permissions" name="button_change_perm">
+                        <input type="submit" class="btn btn-danger" value="Delete User" name="button_del_user"/>
+                    {% endif %}
+                {% endif %}
                 </div>
             </form>
-            {% for message in messages %}
-                {{ message }}<br>
-            {% endfor %}
+{#            {% for message in messages %}#}
+{#                {{ message }}<br>#}
+{#            {% endfor %}#}
         </div>
     {% endif %}
 

@@ -73,7 +73,7 @@
                     <tr>
                         <td>{{ log.date_added }}</td>
                         <td>{{ log.person }}</td>
-                        <td>{{ log.action }}</td>
+                        <td>{{ log.action|linebreaks }}</td>
                     </tr>
                 {% endfor %}
                 </tbody>
