@@ -224,31 +224,40 @@ def manage_user(request, list_id):
         # AJAX CHANGE USER PERMISSIONS
         if request.POST.get('pressed') == 'perm':
             print("perm clicked", request.POST.get('pressed'))
-            print("user selected", request.POST.get("selected_user"))
+            #print("user selected", request.POST.get("selected_user"))
             context['script_list'] ="hah"
 
             user = User.objects.get(username=request.POST.get("selected_user"))
-            print("user type", type(user), "username", user)
+            #print("user type", type(user), "username", user)
 
             perm_list = request.POST.getlist('perm_list[]')
-            print("permlist", perm_list)
+            #print("permlist", perm_list)
             message = []
             for b, p in zip(perm_list, perm_attributes):
                 perm = Permission.objects.get(codename=f"{script_list.owner}_{script_list.list_name}_can_{p}")
-
+                print(perm)
                 if b == 'true':
-                    user.user_permissions.add(perm)
-                    messages.info(request, f"Gave {user} {p} permission")
-                    message.append(f"Gave {user} {p} permission")
+                    if p == "manage_perm" or p == "manage_user":
+                        if str(request.user) == script_list.owner:
+                            user.user_permissions.add(perm)
+                            # messages.info(request, f"Gave {user} {p} permission")
+                            message.append(f"Gave {user} {p} permission")
+                        else:
+                            print("you must be owner")
+                            message.append(f"Cannot give {user} {p} permission")
+                    else:
+                        user.user_permissions.add(perm)
+                        message.append(f"Gave {user} {p} permission")
+
                 else:
                     if p == "manage_perm" or p == "manage_user":
                         if user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_{p}") \
                                 and str(request.user) != script_list.owner:
-                            messages.warning(request, f"You cannot remove {p} permission from {user}")
+                            messages.warning(request, f"Cannot remove {p} permission from {user}")
                             continue
-                            #return render(request, 'runscript/manage_user.html', context)
+
                     user.user_permissions.remove(perm)
-                    messages.info(request, f"Remove {user} {p} permission")
+                    # messages.info(request, f"Remove {user} {p} permission")
                     message.append(f"Remove {user} {p} permission")
 
             script_log = ""
@@ -256,7 +265,7 @@ def manage_user(request, list_id):
                 script_log += m + "\n"
 
             script_list.scriptlog_set.create(person=request.user, action=script_log)
-            print(script_log)
+            #print(script_log)
 
             context['message'] = message
             return JsonResponse(context)

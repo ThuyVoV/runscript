@@ -72,13 +72,13 @@ btn_change_perm.addEventListener("click", e =>{
 
     let p_list = document.getElementsByName("perm_checkbox")
     let perm_list = []
-    console.log("perm_list", p_list)
+    console.log("p_list", p_list)
     for ( let i = 0; i < p_list.length ; i++){
         console.log(p_list[i].checked)
         perm_list.push(p_list[i].checked)
     }
 
-    console.log(perm_list)
+    console.log("perm_list",perm_list)
 
     $.ajax({
         type: 'POST',
@@ -92,6 +92,15 @@ btn_change_perm.addEventListener("click", e =>{
         success: function (response) {
             console.log("success")
             console.log("this is the messages", response.message)
+            let msg_div = document.getElementById("perm_msg")
+
+            msg_div.innerHTML = ``
+            response.message.forEach ( x =>
+                msg_div.innerHTML += `<div>${x}</div>`
+            )
+            show_perm.classList.add("novis")
+            btn_change_perm.classList.add("novis")
+            btn_del_user.classList.add("novis")
         },
         error: function (error) {
             console.log('error', error)
@@ -111,6 +120,7 @@ btn_del_user.addEventListener("click", e =>{
         },
         success: function (response) {
             console.log("success")
+
         },
         error: function (error) {
             console.log('error', error)

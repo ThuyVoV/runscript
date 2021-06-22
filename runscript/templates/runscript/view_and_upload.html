@@ -15,7 +15,7 @@
         {% if can_manage_user %}
             <form action="{% url 'runscript:manage_user' script_list.id %}" method="POST">
                 {% csrf_token %}
-                <input type="submit" value="Mange Users"/>
+                <input type="submit" value="Manage Users"/>
             </form>
         {% endif %}
 
