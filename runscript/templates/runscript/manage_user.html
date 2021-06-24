@@ -1,7 +1,7 @@
 {% extends "runscript/base.html" %}
 {% load static %}
 {% block script %}
-    <script type="text/javascript" src="{% static "javascript/manage_user.js" %}" async></script>
+    <script type="text/javascript" src="{% static "javascript/manage_user.js" %}" defer></script>
 {% endblock script %}
 {% block title %}Manage Users{% endblock title %}
 {% block content %}
@@ -70,5 +70,7 @@
     <div id="show_perm" class="novis"></div>
     <input type="submit" class="novis" value="change permissions" name="button_change_perm" id="btn_change_perm">
     <input type="submit" class="novis" value="Delete User" name="button_del_user" id="btn_del_user">
-    <div id="perm_msg" class="noinvis"></div>
+    <div id="perm_msg" class="novis"></div>
+
+
 {% endblock content %}

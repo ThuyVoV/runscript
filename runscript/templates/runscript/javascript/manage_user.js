@@ -119,7 +119,27 @@ btn_del_user.addEventListener("click", e =>{
             'csrfmiddlewaretoken': csrftoken,
         },
         success: function (response) {
-            console.log("success")
+
+            console.log("message", response.message)
+            console.log('users', response.users)
+            let msg_div = document.getElementById("perm_msg")
+
+            msg_div.innerHTML = ``
+            msg_div.innerHTML += `<div>${response.message}</div>`
+
+            msg_div.classList.remove("novis")
+            show_perm.classList.add("novis")
+            btn_change_perm.classList.add("novis")
+            btn_del_user.classList.add("novis")
+
+            let users = response.users
+            select_user.innerHTML = ``
+            users.forEach( u =>{
+                select_user.innerHTML += `
+                <option id="select_${u}" value="${u}">${u}</option>
+                `
+            })
+
 
         },
         error: function (error) {
@@ -127,6 +147,12 @@ btn_del_user.addEventListener("click", e =>{
         }
     })
 })
+
+// let haha = document.getElementById("mouse").addEventListener("change", mouse)
+//
+// function mouse() {
+//     console.log(this.value)
+// }
 
 function getCookie(name) {
     let cookieValue = null;
