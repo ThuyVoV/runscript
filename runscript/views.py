@@ -381,11 +381,15 @@ def script_confirm_edit(request, file_id):
 
     if request.method == 'POST':
         if request.POST.get("button_edit"):
-
+            ext = '.' + context['filename'].split('.')[-1]
             request.session['new_file_name'] = request.POST.get("new_file_name")
             request.session['new_script_name'] = request.POST.get("new_script_name")
             vh.write_to_file(request.POST.get('script_edit'), vh.get_temp())
             context['fileContent'] = vh.get_file_content(vh.get_temp())
+
+            context['new_file_name'] = request.POST.get("new_file_name").split('.')[0] + ext
+            context['new_script_name'] = request.POST.get("new_script_name")
+
 
             return render(request, 'runscript/script_confirm_edit.html', context)
 

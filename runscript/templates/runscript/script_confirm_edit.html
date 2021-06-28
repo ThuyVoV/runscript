@@ -7,7 +7,14 @@
     </form>
     the url is {{ url }} <br>
     the file is {{ filename }} <br>
-    Are you sure you want to edit this script?
+    Are you sure you want to edit this script? <br>
+
+    {% if new_file_name %}
+        Changing filename: {{ filename }} to {{ new_file_name }} <br>
+    {% endif %}
+    {% if new_script_name %}
+        Changing script name: {{ script_name }} to {{ new_script_name }} <br>
+    {% endif %}
 
     {% if can_edit %}
         <form action="{% url 'runscript:confirm_edit' script_name.id %}" method="POST">
