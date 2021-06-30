@@ -1,4 +1,8 @@
 {% extends "runscript/base.html" %}
+{% load static %}
+{% block script %}
+    <script type="text/javascript" src="{% static "javascript/view_and_upload.js" %}" defer></script>
+{% endblock script %}
 {% block title %}View and Upload file page{% endblock title %}
 {% block content %}
     <form action="{% url 'runscript:main' %}" method="GET">
@@ -36,8 +40,10 @@
 
             <!-- List of uploaded files -->
             {% if script_list.uploadfilemodel_set.all %}
+
+                <input type="text" id="upload_filter" placeholder="Search script">
                 Files:
-                <ul>
+                <ul id="upload_all">
                     {% for script in script_list.uploadfilemodel_set.all %}
                         <li><a href="{% url 'runscript:detail' script.id %}">{{ script.script_name }}</a></li>
                     {% endfor %}

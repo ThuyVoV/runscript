@@ -8,6 +8,9 @@ class ScriptList(models.Model):
     list_name = models.CharField(max_length=100)
     owner = models.CharField(max_length=100)
 
+    class Meta:
+        ordering = ['list_name']
+
     def __str__(self):
         return f"{self.owner} - {self.list_name}"
 
@@ -27,6 +30,9 @@ class UploadFileModel(models.Model):
     script_name = models.CharField(max_length=50, default='')
     date_added = models.DateTimeField(default=timezone.now)
     upload_file = models.FileField(upload_to='runscript/scripts')
+
+    class Meta:
+        ordering = ['script_name']
 
     def __str__(self):
         return self.script_name
