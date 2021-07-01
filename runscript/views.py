@@ -329,7 +329,15 @@ def script_detail(request, file_id):
             # get arguments separated by space and quotes example:
             # 123 "hello there" 456 -> ['123', 'hello there', 456']
             args = shlex.split(args)
-            subprocess.run([sys.executable, context['script_name'].upload_file.path] + args, text=True, stdout=t)
+            script_path = context['script_name'].upload_file.path
+            ext = script_path.split('.')[-1]
+            print("path",script_path)
+            print("ext",ext)
+
+            if ext == 'sh':
+                subprocess.call(['sh', script_path] + args, text=True, stdout=t)
+            elif ext == 'py':
+                subprocess.run([sys.executable, script_path] + args, text=True, stdout=t)
 
             t.close()
             with open(vh.get_temp(), 'r') as t:
