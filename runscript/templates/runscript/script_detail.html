@@ -2,10 +2,10 @@
 
 {% block title %} Script Detail Page{% endblock title %}
 {% block content %}
-<form action="{% url 'runscript:view_and_upload' script_name.script_list_id %}" method="get">
-    <input type="submit" value="Back"/>
-</form>
-{#<button onclick=window.history.back()>Go Back</button>#}
+    <form action="{% url 'runscript:view_and_upload' script_name.script_list_id %}" method="get">
+        <input type="submit" value="Back"/>
+    </form>
+    {#<button onclick=window.history.back()>Go Back</button>#}
     {% if can_view %}
         the script name is {{ script_name }} <br>
         the url is {{ script_name.upload_file.url }} <br>
@@ -24,6 +24,8 @@
                     Enter arguments here
                     <input type="text" name="arguments">
                     <input type="submit" value="Run this script" name="button_run_script"/>
+                    <input type="submit" value="Task Scheduler" name="button_task_schedule"/>
+                    <input type="submit" value="Remove Task" name="button_remove_task"/>
                 </form>
             {% endif %}
 
@@ -32,11 +34,13 @@
                     {% csrf_token %}
                     <input type="submit" value="Edit this script"/>
                 </form><br>
-                {% endif %}
+            {% endif %}
+
+
         {% endif %}
 
         <!-- get the output of the script -->
-        {%  if can_run %}
+        {% if can_run %}
             {% if output %}
                 {% for line in output %}{{ line }}<br>{% endfor %}
             {% else %}

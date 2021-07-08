@@ -18,7 +18,7 @@ def get_file_content(file_path):
 
 
 def get_temp():
-    return f'{settings.BASE_DIR}/runscript/scripts/temp.py'
+    return f'{settings.BASE_DIR}/runscript/scripts/temp.txt'
 
 
 def write_to_file(content, file_path):

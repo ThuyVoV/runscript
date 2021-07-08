@@ -10,9 +10,11 @@ from django.views.generic.list import ListView
 
 from .models import UploadFileModel, ScriptList
 from .forms import UploadFileForm, CreateScriptListForm
+from .scheduler import scheduler
 
-from runscript.helper_func.decorators import AccessCheck
+from .helper_func.decorators import AccessCheck
 from .helper_func import view_helper as vh
+from .helper_func.run_task import run_task
 
 import subprocess
 import sys
@@ -322,28 +324,47 @@ def script_detail(request, file_id):
     # when they click run script, call the script with argument
     # write the output to a temp file to display it on screen, delete temp file
     if request.method == 'POST':
+        args = request.POST.get("arguments")
+
+        # get arguments separated by space and quotes example:
+        # 123 "hello there" 456 -> ['123', 'hello there', 456']
+        arguments = shlex.split(args)
+        script_path = context['script_name'].upload_file.path
+        ext = script_path.split('.')[-1]
+
         if request.POST.get("button_run_script"):
-            args = request.POST.get("arguments")
-            t = open(vh.get_temp(), 'w')
+            # args = request.POST.get("arguments")
+
 
             # get arguments separated by space and quotes example:
             # 123 "hello there" 456 -> ['123', 'hello there', 456']
-            args = shlex.split(args)
-            script_path = context['script_name'].upload_file.path
-            ext = script_path.split('.')[-1]
-            print("path",script_path)
-            print("ext",ext)
+            # args = shlex.split(args)
+            # script_path = context['script_name'].upload_file.path
+            # ext = script_path.split('.')[-1]
 
+            t = open(vh.get_temp(), 'w')
             if ext == 'sh':
-                subprocess.call(['sh', script_path] + args, text=True, stdout=t)
+                subprocess.call(['sh', script_path] + arguments, text=True, stdout=t)
             elif ext == 'py':
-                subprocess.run([sys.executable, script_path] + args, text=True, stdout=t)
-
+                subprocess.run([sys.executable, script_path] + arguments, text=True, stdout=t)
             t.close()
+
             with open(vh.get_temp(), 'r') as t:
                 for line in t:
                     output.append(line)
             t.close()
+        if request.POST.get("button_task_schedule"):
+            args = [script_path, arguments, ext]
+
+            # if ext == 'sh':
+            #     subprocess.call(['sh', script_path] + args, text=True, stdout=t)
+            # elif ext == 'py':
+            #     subprocess.run([sys.executable, script_path] + args, text=True, stdout=t)
+
+            #run_task(list(args))
+            scheduler.add_job(run_task, 'interval', args=args, id=context['script_name'].script_name, seconds=10, replace_existing=True)
+        if request.POST.get("button_remove_task"):
+            scheduler.remove_job(job_id=context['script_name'].script_name, jobstore='default')
 
     context['fileContent'] = vh.get_file_content(context['script_name'].upload_file.path)
     context['output'] = output
