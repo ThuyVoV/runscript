@@ -5,14 +5,13 @@ from datetime import datetime
 
 
 def run_task(*args):
-    print(args)
+
     # path = args[0][0]
     # arguments = args[0][1]
     # ext = args[0][2]
     now = datetime.now()
     # dd/mm/YY H:M:S
     dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
-
 
     path = args[0]
     arguments = args[1]

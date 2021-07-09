@@ -16,7 +16,8 @@
 
             <form class="yesno" action="{% url 'runscript:confirm_edit' script_name.id %}" method="POST">
                 {% csrf_token %}
-                script name: <input type="text" name="new_script_name" placeholder="{{ script_name }}">
+{#                script name: <input type="text" name="new_script_name" placeholder="{{ script_name }}">#}
+                script name: {{ script_name }} <br>
                 file name: <input type="text" name="new_file_name" placeholder="{{ filename }}"><br><br>
                 <div>
                     <textarea rows="10" cols="50" name="script_edit" id="textbox">{% for line in fileContent %}{{ line }}{% endfor %}</textarea><br>

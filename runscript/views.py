@@ -90,6 +90,7 @@ def view_and_upload(request, list_id):
     if request.method == 'POST':
         if request.POST.get("button_upload"):
             form = UploadFileForm(request.POST, request.FILES)
+
             if form.is_valid():
                 # add a file to the specific list with the list_id and save it
                 new_script = form.cleaned_data["script_name"]
@@ -99,6 +100,8 @@ def view_and_upload(request, list_id):
                 script_list.scriptlog_set.create(action=script_log, person=request.user)
 
                 return redirect('runscript:view_and_upload', list_id)
+            else:
+                context['dupe'] = "That script name already exists, script names must be unique"
 
     context['form'] = form
 
@@ -364,7 +367,11 @@ def script_detail(request, file_id):
             #run_task(list(args))
             scheduler.add_job(run_task, 'interval', args=args, id=context['script_name'].script_name, seconds=10, replace_existing=True)
         if request.POST.get("button_remove_task"):
-            scheduler.remove_job(job_id=context['script_name'].script_name, jobstore='default')
+            job = scheduler.get_job(job_id=context['script_name'].script_name)
+            if job is not None:
+                job.remove()
+            else:
+                print("job doesnt exist")
 
     context['fileContent'] = vh.get_file_content(context['script_name'].upload_file.path)
     context['output'] = output
@@ -419,19 +426,19 @@ def script_confirm_edit(request, file_id):
             context['new_file_name'] = request.POST.get("new_file_name").split('.')[0] + ext
             context['new_script_name'] = request.POST.get("new_script_name")
 
-
             return render(request, 'runscript/script_confirm_edit.html', context)
 
         if request.POST.get("button_edit_yes"):
-            if request.session.get('new_script_name') != '':
-                new_script_name = request.session.get('new_script_name')
-                upload.script_name = new_script_name
-                upload.save()
-
-                try:
-                    del request.session['newscriptname']
-                except KeyError:
-                    pass
+            # new script name
+            # if request.session.get('new_script_name') != '':
+            #     new_script_name = request.session.get('new_script_name')
+            #     upload.script_name = new_script_name
+            #     upload.save()
+            #
+            #     try:
+            #         del request.session['newscriptname']
+            #     except KeyError:
+            #         pass
 
             if request.session.get('new_file_name') != '':
                 new_file_name = request.session.get('new_file_name')
@@ -494,6 +501,11 @@ def script_confirm_delete(request, file_id):
             UploadFileModel.objects.get(pk=file_id).delete()
             script_log = f"{request.user} deleted {context['script_name']}"
             script_list.scriptlog_set.create(action=script_log, person=request.user)
+
+            job = scheduler.get_job(job_id=context['script_name'].script_name)
+            if job is not None:
+                job.remove()
+
             return redirect('runscript:view_and_upload', context['script_name'].script_list_id)
 
     return render(request, 'runscript/script_confirm_delete.html', context)

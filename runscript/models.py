@@ -27,7 +27,7 @@ class ScriptLog(models.Model):
 
 class UploadFileModel(models.Model):
     script_list = models.ForeignKey(ScriptList, on_delete=models.CASCADE, null=True)
-    script_name = models.CharField(max_length=50, default='')
+    script_name = models.CharField(max_length=50, default='', unique=True)
     date_added = models.DateTimeField(default=timezone.now)
     upload_file = models.FileField(upload_to='runscript/scripts')
 

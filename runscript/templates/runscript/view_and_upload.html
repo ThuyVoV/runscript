@@ -34,15 +34,16 @@
                         <br>
                         {{ form.upload_file }}
                     </p>
+                    {% if dupe %} {{ dupe }} {% endif %}
                     <p><input type="submit" value="Upload" name="button_upload"/></p>
                 </form>
             {% endif %}
 
             <!-- List of uploaded files -->
             {% if script_list.uploadfilemodel_set.all %}
-
-                <input type="text" id="upload_filter" placeholder="Search script">
                 Files:
+                <input type="text" id="upload_filter" placeholder="Search script">
+
                 <ul id="upload_all">
                     {% for script in script_list.uploadfilemodel_set.all %}
                         <li><a href="{% url 'runscript:detail' script.id %}">{{ script.script_name }}</a></li>
