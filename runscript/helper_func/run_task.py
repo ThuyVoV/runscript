@@ -5,7 +5,6 @@ from datetime import datetime
 
 
 def run_task(*args):
-
     # path = args[0][0]
     # arguments = args[0][1]
     # ext = args[0][2]
@@ -18,7 +17,6 @@ def run_task(*args):
     ext = args[2]
     print('path', path)
     print('arg', arguments)
-    print('ext', ext)
     print("date and time =", dt_string)
 
     t = open(get_temp(), 'w')
@@ -28,3 +26,20 @@ def run_task(*args):
     elif ext == 'py':
         subprocess.run([sys.executable, path] + arguments, text=True, stdout=t)
     t.close()
+
+
+def validate_dates(task_dates, context):
+
+    valid = [True] * len(task_dates)
+    for i, date in enumerate(task_dates):
+        if date == '':
+            task_dates[i] = '*'
+
+
+
+    print(valid)
+    #return valid
+
+def check_year(task_dates):
+    pass
+

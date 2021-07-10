@@ -23,10 +23,21 @@
                     {% csrf_token %}
                     Enter arguments here
                     <input type="text" name="arguments">
-                    <input type="submit" value="Run this script" name="button_run_script"/>
+                    <input type="submit" value="Run this script" name="button_run_script"/> <br><br>
+
+                    Year: <input type="text" name="task_year" placeholder="4-digit year"> <br>
+                    Month: <input type="text" name="task_month" placeholder="1-12"> <br>
+                    Day: <input type="text" name="task_day" placeholder="1-31"> <br>
+                    Week: <input type="text" name="task_week" placeholder="1-53"> <br>
+                    Day of Week: <input type="text" name="task_day_of_week" placeholder="0-6"> <br>
+                    Hour: <input type="text" name="task_hour" placeholder="0-23"> <br>
+                    Minute: <input type="text" name="task_minute" placeholder="0-59"> <br>
+                    Second: <input type="text" name="task_second" placeholder="0-59"> <br>
+
+
+                    <br>
                     <input type="submit" value="Task Scheduler" name="button_task_schedule"/>
-                    <input type="submit" value="Remove Task" name="button_remove_task"/>
-                <input type="submit" value="print" name="print"/>
+                    <input type="submit" value="Remove Task" name="button_remove_task"/> <br><br>
                 </form>
             {% endif %}
 

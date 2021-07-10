@@ -14,7 +14,7 @@ from .scheduler import scheduler
 
 from .helper_func.decorators import AccessCheck
 from .helper_func import view_helper as vh
-from .helper_func.run_task import run_task
+from .helper_func import run_task as rt
 
 import subprocess
 import sys
@@ -335,16 +335,8 @@ def script_detail(request, file_id):
         script_path = context['script_name'].upload_file.path
         ext = script_path.split('.')[-1]
 
+        # run script on the page
         if request.POST.get("button_run_script"):
-            # args = request.POST.get("arguments")
-
-
-            # get arguments separated by space and quotes example:
-            # 123 "hello there" 456 -> ['123', 'hello there', 456']
-            # args = shlex.split(args)
-            # script_path = context['script_name'].upload_file.path
-            # ext = script_path.split('.')[-1]
-
             t = open(vh.get_temp(), 'w')
             if ext == 'sh':
                 subprocess.call(['sh', script_path] + arguments, text=True, stdout=t)
@@ -356,17 +348,30 @@ def script_detail(request, file_id):
                 for line in t:
                     output.append(line)
             t.close()
+
+        # schedule the task with the selected date values
         if request.POST.get("button_task_schedule"):
             args = [script_path, arguments, ext]
 
-            # if ext == 'sh':
-            #     subprocess.call(['sh', script_path] + args, text=True, stdout=t)
-            # elif ext == 'py':
-            #     subprocess.run([sys.executable, script_path] + args, text=True, stdout=t)
+            task_dates = [
+                request.POST.get("task_year"), request.POST.get("task_month"), request.POST.get("task_day"),
+                request.POST.get("task_week"), request.POST.get("task_day_of_week"),
+                request.POST.get("task_hour"), request.POST.get("task_minute"), request.POST.get("task_second")
+            ]
 
-            #run_task(list(args))
-            scheduler.add_job(run_task, 'interval', args=args, id=context['script_name'].script_name, seconds=10, replace_existing=True)
+            print(task_dates)
+            rt.validate_dates(task_dates, context)
+            print(task_dates)
+            valid = False
+
+
+
+            if valid:
+                scheduler.add_job(rt.run_task, 'cron', args=args, id=context['script_name'].script_name, minute='0, 2', replace_existing=True)
+
+        # remove task tied to this script
         if request.POST.get("button_remove_task"):
+
             job = scheduler.get_job(job_id=context['script_name'].script_name)
             if job is not None:
                 job.remove()
