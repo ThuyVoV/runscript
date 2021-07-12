@@ -339,7 +339,7 @@ def script_detail(request, file_id):
         if request.POST.get("button_run_script"):
             t = open(vh.get_temp(), 'w')
             if ext == 'sh':
-                subprocess.call(['sh', script_path] + arguments, text=True, stdout=t)
+                subprocess.call(['sh', script_path] + arguments, stdout=t)
             elif ext == 'py':
                 subprocess.run([sys.executable, script_path] + arguments, text=True, stdout=t)
             t.close()
@@ -360,11 +360,14 @@ def script_detail(request, file_id):
             ]
 
             print(task_dates)
-            rt.validate_dates(task_dates, context)
+            context['task_scheduler'] = rt.validate_dates(task_dates, context)
             print(task_dates)
             valid = False
 
-
+            # context['ooga'] = [False, "hello"]
+            #print(context['task_scheduler'])
+            for t in context['task_scheduler']:
+                print(context[t])
 
             if valid:
                 scheduler.add_job(rt.run_task, 'cron', args=args, id=context['script_name'].script_name, minute='0, 2', replace_existing=True)
