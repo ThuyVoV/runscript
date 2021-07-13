@@ -1,5 +1,5 @@
-import subprocess
-import sys
+import re, subprocess, sys
+
 from .view_helper import get_temp
 from datetime import datetime
 
@@ -123,22 +123,22 @@ def check_date_range(date, task, minVal, maxVal):
 
 # 4 digit year
 def check_year(date, task):
-    # validation = [True, '']
 
-    # must be length of 4
-    if len(date) != 4:
-        return [False, "Incorrect number of digits"]
+    # must start and end with 4 digits
+    pattern = re.compile(r'^\d{4}$')
+    match = pattern.findall(date)
+    print("this is match:", match)
 
-    # must be 4 digits
-    if not date.isdigit():
-        return [False, "Input a four digit number"]
+    if match:
+        now = datetime.now()
+        current_year = int(now.strftime("%Y"))
 
-    now = datetime.now()
-    current_year = int(now.strftime("%Y"))
-
-    print(date, task)
-
-    return [True]
+        if int(date) >= current_year:
+            return [True, f"{date} GE {current_year}"]
+        else:
+            return [False, f"{date} LT {current_year}"]
+    else:
+        return [False, "Not 4 digits"]
 
 
 # 1-12

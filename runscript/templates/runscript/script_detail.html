@@ -26,13 +26,13 @@
                     <input type="submit" value="Run this script" name="button_run_script"/> <br><br>
 
                     Year: <input type="text" name="task_year" placeholder="4-digit year"> {{ task_year.1 }}<br>
-                    Month: <input type="text" name="task_month" placeholder="1-12"> <br>
-                    Day: <input type="text" name="task_day" placeholder="1-31"> <br>
-                    Week: <input type="text" name="task_week" placeholder="1-53"> <br>
-                    Day of Week: <input type="text" name="task_day_of_week" placeholder="0-6"> <br>
-                    Hour: <input type="text" name="task_hour" placeholder="0-23"> <br>
-                    Minute: <input type="text" name="task_minute" placeholder="0-59"> <br>
-                    Second: <input type="text" name="task_second" placeholder="0-59"> <br>
+                    Month: <input type="text" name="task_month" placeholder="1-12"> {{ task_month.1 }}<br>
+                    Day: <input type="text" name="task_day" placeholder="1-31"> {{ task_day.1 }}<br>
+                    Week: <input type="text" name="task_week" placeholder="1-53"> {{ task_week.1 }}<br>
+                    Day of Week: <input type="text" name="task_day_of_week" placeholder="0-6"> {{ task_day_of_week.1 }}<br>
+                    Hour: <input type="text" name="task_hour" placeholder="0-23"> {{ task_hour.1 }}<br>
+                    Minute: <input type="text" name="task_minute" placeholder="0-59"> {{ task_minute.1 }}<br>
+                    Second: <input type="text" name="task_second" placeholder="0-59"> {{ task_second.1 }}<br>
 
                     {% if ooga.0 == True %}
                         {{ ooga.1 }}

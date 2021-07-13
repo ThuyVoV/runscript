@@ -361,7 +361,7 @@ def script_detail(request, file_id):
 
             print(task_dates)
             context['task_scheduler'] = rt.validate_dates(task_dates, context)
-            print(task_dates)
+            #print(task_dates)
             valid = False
 
             # context['ooga'] = [False, "hello"]
