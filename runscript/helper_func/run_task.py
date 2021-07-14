@@ -147,7 +147,7 @@ def within_range(value, minVal, maxVal):
 
 # 0,1,5,8,13,14
 
-# 1,,,,2-3,,,5-6, 00,002,02, 3,3,5,7,7,0007,14 , 200, -1,    8-4 ,123-577 , 11-14     ,   0-6    ,
+# 1,,,2-3,,,5-6, 00,002,02, 3,3,5,7,7,0007,14 , 200, -1, !,@,#,$,lmao, 8-4 ,123-577 , 11-14//,10-12,// ,   0-6    ,
 # ^\d{1,2}(\-\d{1,2})?$
 def check_date_range(date, task, minVal, maxVal):
     # pattern, must be a 1 or 2 digit integer
