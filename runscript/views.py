@@ -1,4 +1,4 @@
-#from django.contrib import messages
+# from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User, Permission
 from django.contrib.contenttypes.models import ContentType
@@ -128,7 +128,7 @@ def manage_user(request, list_id):
             # only owner of list can add to users
             if str(request.user) == script_list.owner:
                 if User.objects.filter(username=add_user).exists():
-                    #messages.success(request, f'You added {add_user} to {script_list.list_name}')
+                    # messages.success(request, f'You added {add_user} to {script_list.list_name}')
                     script_list.user.add(User.objects.get(username=add_user).pk)
 
                     perm = Permission.objects.get(codename=f"{script_list.owner}_{script_list.list_name}_can_view")
@@ -138,7 +138,7 @@ def manage_user(request, list_id):
                     script_list.scriptlog_set.create(action=script_log, person=request.user)
                 else:
                     pass
-                    #messages.error(request, "User does not exist.")
+                    # messages.error(request, "User does not exist.")
             else:
                 pass
                 # messages.error(request, "you must be the owner of this list")
@@ -146,29 +146,29 @@ def manage_user(request, list_id):
         # DELETE USER
         elif request.POST.get("button_del_user"):
             if request.POST.get('selected_user') == "Select User":
-                #messages.info(request, "No changes were made")
+                # messages.info(request, "No changes were made")
                 return render(request, 'runscript/manage_user.html', context)
 
             del_user = request.POST.get('selected_user')
 
             if str(request.user) == script_list.owner:
                 if User.objects.filter(username=del_user).exists():
-                    #messages.success(request, f'You deleted {del_user} from {script_list.list_name}')
+                    # messages.success(request, f'You deleted {del_user} from {script_list.list_name}')
                     script_list.user.remove(User.objects.get(username=del_user).pk)
                     script_log = f'{request.user} deleted {del_user} from {script_list.list_name}'
                     script_list.scriptlog_set.create(action=script_log, person=request.user)
                 else:
                     pass
-                    #messages.error(request, "That user does not exist.")
+                    # messages.error(request, "That user does not exist.")
             else:
                 pass
-                #messages.error(request, "you must be the owner of this list")
+                # messages.error(request, "you must be the owner of this list")
 
         # CHANGE USER PERMISSION
         elif request.POST.get("button_change_perm"):
 
             if request.POST.get('selected_user') == "Select User":
-                #messages.info(request, "No changes were made")
+                # messages.info(request, "No changes were made")
                 return render(request, 'runscript/manage_user.html', context)
 
             user = User.objects.get(username=request.POST.get("selected_user"))
@@ -177,15 +177,15 @@ def manage_user(request, list_id):
                 perm = Permission.objects.get(codename=f"{script_list.owner}_{script_list.list_name}_can_{p}")
                 if request.POST.get(p) == "clicked":
                     user.user_permissions.add(perm)
-                    #messages.info(request, f"Gave {user} {p} permission")
+                    # messages.info(request, f"Gave {user} {p} permission")
                 else:
                     if p == "manage_perm" or p == "manage_user":
                         if user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_{p}") \
                                 and str(request.user) != script_list.owner:
-                            #messages.warning(request, f"You cannot remove {p} permission from {user}")
+                            # messages.warning(request, f"You cannot remove {p} permission from {user}")
                             return render(request, 'runscript/manage_user.html', context)
                     user.user_permissions.remove(perm)
-                    #messages.info(request, f"Remove {user} {p} permission")
+                    # messages.info(request, f"Remove {user} {p} permission")
 
         # USER SELECTION
         elif request.POST.get("button_select_user"):
@@ -208,7 +208,7 @@ def manage_user(request, list_id):
         if request.GET.get("pressed") == 'select':
             print("select clicked", request.GET.get("pressed"))
 
-            users=[]
+            users = []
             for u in script_list.user.all():
                 users.append(str(u))
             context['script_list'] = {
@@ -233,14 +233,14 @@ def manage_user(request, list_id):
         # AJAX CHANGE USER PERMISSIONS
         if request.POST.get('pressed') == 'perm':
             print("perm clicked", request.POST.get('pressed'))
-            #print("user selected", request.POST.get("selected_user"))
-            context['script_list'] ="hah"
+            # print("user selected", request.POST.get("selected_user"))
+            context['script_list'] = "hah"
 
             user = User.objects.get(username=request.POST.get("selected_user"))
-            #print("user type", type(user), "username", user)
+            # print("user type", type(user), "username", user)
 
             perm_list = request.POST.getlist('perm_list[]')
-            #print("permlist", perm_list)
+            # print("permlist", perm_list)
             message = []
             for b, p in zip(perm_list, perm_attributes):
                 perm = Permission.objects.get(codename=f"{script_list.owner}_{script_list.list_name}_can_{p}")
@@ -262,7 +262,7 @@ def manage_user(request, list_id):
                     if p == "manage_perm" or p == "manage_user":
                         if user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_can_{p}") \
                                 and str(request.user) != script_list.owner:
-                            #messages.warning(request, f"Cannot remove {p} permission from {user}")
+                            # messages.warning(request, f"Cannot remove {p} permission from {user}")
                             continue
 
                     user.user_permissions.remove(perm)
@@ -274,7 +274,7 @@ def manage_user(request, list_id):
                 script_log += m + "\n"
 
             script_list.scriptlog_set.create(person=request.user, action=script_log)
-            #print(script_log)
+            # print(script_log)
 
             context['message'] = message
             return JsonResponse(context)
@@ -289,7 +289,7 @@ def manage_user(request, list_id):
             if str(request.user) == script_list.owner:
 
                 if User.objects.filter(username=del_user).exists():
-                    #messages.success(request, f'You deleted {del_user} from {script_list.list_name}')
+                    # messages.success(request, f'You deleted {del_user} from {script_list.list_name}')
                     script_list.user.remove(User.objects.get(username=del_user).pk)
                     script_log = f'{request.user} deleted {del_user} from {script_list.list_name}'
                     script_list.scriptlog_set.create(action=script_log, person=request.user)
@@ -361,16 +361,17 @@ def script_detail(request, file_id):
 
             print(task_dates)
             context['task_scheduler'] = rt.validate_dates(task_dates, context)
-            #print(task_dates)
+            # print(task_dates)
             valid = False
 
             # context['ooga'] = [False, "hello"]
-            #print(context['task_scheduler'])
+            # print(context['task_scheduler'])
             for t in context['task_scheduler']:
                 print(context[t])
 
-            if valid:
-                scheduler.add_job(rt.run_task, 'cron', args=args, id=context['script_name'].script_name, minute='0, 2', replace_existing=True)
+            #if valid:
+            # scheduler.add_job(rt.run_task, 'cron', args=args, id=context['script_name'].script_name,
+            #                   minute='12,18,14,15,16', replace_existing=True)
 
         # remove task tied to this script
         if request.POST.get("button_remove_task"):

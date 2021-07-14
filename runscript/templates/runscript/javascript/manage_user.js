@@ -58,8 +58,6 @@ user.addEventListener("click", e => {
                     </div>`
                 }
             }
-            // })
-
         },
         error: function (error) {
             console.log('error', error)
@@ -139,8 +137,6 @@ btn_del_user.addEventListener("click", e =>{
                 <option id="select_${u}" value="${u}">${u}</option>
                 `
             })
-
-
         },
         error: function (error) {
             console.log('error', error)
