@@ -164,6 +164,10 @@ def check_date_range(date, task, minVal, maxVal):
     error = ""
     goodv = []
     badv= []
+    badinput = []
+    badrange = []
+    badvalues = []
+
     for v in values:
         match = pattern.findall(v)
         # for m in match:
@@ -175,6 +179,7 @@ def check_date_range(date, task, minVal, maxVal):
                 nums = v.split('-')
                 if int(nums[0]) > int(nums[1]):
                     badv.append(v)
+                    badvalues.append(v)
                     error = error + f"{v} incorrect input, first number cannot be larger than the second."
                     continue
 
@@ -183,6 +188,7 @@ def check_date_range(date, task, minVal, maxVal):
                     goodv.append(v)
                 else:
                     badv.append(v)
+                    badrange.append(v)
                     error = error + f"{v} not in the correct range. "
 
             # single number case
@@ -192,10 +198,19 @@ def check_date_range(date, task, minVal, maxVal):
                     goodv.append(v)
                 else:
                     badv.append(v)
+                    badrange.append(v)
                     error = error + f"{v} not in the correct range. "
         else:
             badv.append(v)
+            badinput.append(v)
             error = error + f"{v} is invalid. "
+
+    badinput = ', '.join(badinput)
+    badrange = ', '.join(badrange)
+    badvalues = ', '.join(badvalues)
+
+    error = f"{badinput} are invalid. {badrange} are not in the correct range. " \
+            f"{badvalues} first cannot be larger than second."
 
     print("this is error:", error)
     print("goodv", goodv, len(goodv), "\nbadv", badv, len(badv))
