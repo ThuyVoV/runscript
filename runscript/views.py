@@ -353,23 +353,46 @@ def script_detail(request, file_id):
         if request.POST.get("button_task_schedule"):
             args = [script_path, arguments, ext]
 
-            task_dates = [
-                request.POST.get("task_year"), request.POST.get("task_month"), request.POST.get("task_day"),
-                request.POST.get("task_week"), request.POST.get("task_day_of_week"),
-                request.POST.get("task_hour"), request.POST.get("task_minute"), request.POST.get("task_second")
+            context['task_scheduler'] = [
+                "task_year", "task_month", "task_day",
+                "task_week", "task_day_of_week",
+                "task_hour", "task_minute", "task_second"
             ]
 
-            print(task_dates)
-            context['task_scheduler'] = rt.validate_dates(task_dates, context)
-            # print(task_dates)
-            valid = False
+            context['task_dates_original'] = []
+            task_dates = []
+            for t in context['task_scheduler']:
+                context['task_dates_original'].append(request.POST.get(t))
+                task_dates.append(request.POST.get(t))
+
+            # task_dates = [
+            #     request.POST.get("task_year"), request.POST.get("task_month"), request.POST.get("task_day"),
+            #     request.POST.get("task_week"), request.POST.get("task_day_of_week"),
+            #     request.POST.get("task_hour"), request.POST.get("task_minute"), request.POST.get("task_second")
+            # ]
+
+            print(context['task_dates_original'])
+            rt.validate_dates(task_dates, context)
+            print("ct task dates", context['task_dates_original'])
+            print("task dates", task_dates)
+            valid = True
+
 
             # context['ooga'] = [False, "hello"]
             # print(context['task_scheduler'])
             for t in context['task_scheduler']:
-                print(context[t])
+                print(context[t], context[t][0], type(context[t][0]))
 
-            #if valid:
+            for t in context['task_scheduler']:
+                #print("this is:", t, context[t][0])
+                if not context[t][0]:
+                    print("breaking on ", t)
+                    valid = False
+                    break
+
+            print("this is valid", valid)
+
+            # if valid:
             # scheduler.add_job(rt.run_task, 'cron', args=args, id=context['script_name'].script_name,
             #                   minute='12,18,14,15,16', replace_existing=True)
 

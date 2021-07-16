@@ -1,7 +1,9 @@
-import re, subprocess, sys
+import re
+import subprocess
+import sys
+from datetime import datetime
 
 from .view_helper import get_temp
-from datetime import datetime
 
 
 def run_task(*args):
@@ -26,17 +28,15 @@ def run_task(*args):
 
 
 def validate_dates(task_dates, context):
-    task_scheduler = [
-        "task_year", "task_month", "task_day",
-        "task_week", "task_day_of_week",
-        "task_hour", "task_minute", "task_second"
-    ]
-
-    # print(task_scheduler)
-
-    # creates context for each date input and assumes false before validations
-    for task in task_scheduler:
-        context[task] = [False, '']  # f"this is the task_scheduler for: {task}"]
+    # task_scheduler = [
+    #     "task_year", "task_month", "task_day",
+    #     "task_week", "task_day_of_week",
+    #     "task_hour", "task_minute", "task_second"
+    # ]
+    #
+    # # creates context for each date input and assumes false before validations
+    # for task in task_scheduler:
+    #     context[task] = [False, '']  # f"this is the task_scheduler for: {task}"]
 
     # for task in task_scheduler:
     #     print(context[task][1])
@@ -46,30 +46,9 @@ def validate_dates(task_dates, context):
         if date == '':
             task_dates[i] = '*'
 
-    # for i,s in enumerate(task_scheduler):
-    #     print(i,s[0], s[1])
-
-    # for i, task in enumerate(task_scheduler):
-    #     if i == 0:
-    #         context[task] = check_year(task_dates[i], task_scheduler[i])
-    #     elif i == 1:
-    #         context[task] = check_month(task_dates[i], task_scheduler[i])
-    #     elif i == 2:
-    #         context[task] = check_day(task_dates[i], task_scheduler[i])
-    #     elif i == 3:
-    #         context[task] = check_week(task_dates[i], task_scheduler[i])
-    #     elif i == 4:
-    #         context[task] = check_day_of_week(task_dates[i], task_scheduler[i])
-    #     elif i == 5:
-    #         context[task] = check_hour(task_dates[i], task_scheduler[i])
-    #     elif i == 6:
-    #         context[task] = check_minute(task_dates[i], task_scheduler[i])
-    #     elif i == 7:
-    #         context[task] = check_second(task_dates[i], task_scheduler[i])
-
     # task_date[i] is the input string for the field
     # task_scheduler[i] is the name of the input field (task_year, task_month, etc)
-    for i, task in enumerate(task_scheduler):
+    for i, task in enumerate(context['task_scheduler']):
         if task_dates[i] == '*':
             context[task] = [True, 'from *']
             continue
@@ -77,23 +56,21 @@ def validate_dates(task_dates, context):
         task_dates[i] = parse_date(task_dates[i])
 
         if i == 0:  # year
-            context[task] = check_year(task_dates[i], task_scheduler[i])
+            context[task] = check_year(task_dates[i], context['task_scheduler'][i])
         elif i == 1:  # month
-            context[task] = check_date_range(task_dates[i], task_scheduler[i], 1, 12)
+            context[task] = check_date_range(task_dates[i], context['task_scheduler'][i], 1, 12)
         elif i == 2:  # day
-            context[task] = check_date_range(task_dates[i], task_scheduler[i], 1, 31)
+            context[task] = check_date_range(task_dates[i], context['task_scheduler'][i], 1, 31)
         elif i == 3:  # week
-            context[task] = check_date_range(task_dates[i], task_scheduler[i], 1, 53)
+            context[task] = check_date_range(task_dates[i], context['task_scheduler'][i], 1, 53)
         elif i == 4:  # day of week
-            context[task] = check_date_range(task_dates[i], task_scheduler[i], 0, 6)
+            context[task] = check_date_range(task_dates[i], context['task_scheduler'][i], 0, 6)
         elif i == 5:  # hour
-            context[task] = check_date_range(task_dates[i], task_scheduler[i], 0, 23)
+            context[task] = check_date_range(task_dates[i], context['task_scheduler'][i], 0, 23)
         elif i == 6:  # minute
-            context[task] = check_date_range(task_dates[i], task_scheduler[i], 0, 59)
+            context[task] = check_date_range(task_dates[i], context['task_scheduler'][i], 0, 59)
         elif i == 7:  # second
-            context[task] = check_date_range(task_dates[i], task_scheduler[i], 0, 59)
-
-    return task_scheduler
+            context[task] = check_date_range(task_dates[i], context['task_scheduler'][i], 0, 59)
 
 
 # 1,,,,2-3,,,5-6, 00,002,02, 3,3,5,7,7,0007,14 , 200, -1,           ,
@@ -121,6 +98,8 @@ def parse_date(date):
     # remove duplicates
     date = list(set(date))
     date.sort()
+
+    # sort inputs based on integer or range
     single = []
     double = []
     for d in date:
@@ -153,25 +132,18 @@ def check_date_range(date, task, minVal, maxVal):
     # pattern, must be a 1 or 2 digit integer
     # if it is a range of number, the two numbers must be separated by a dash
     pattern = re.compile(r'^\d{1,2}(?:\-\d{1,2})?$')
-    # date = date.replace(" ", "")
-    # if date[-1] == ',':
-    #     date = date[:len(date)-1:]
+
     values = date.split(',')
-    # print("values before:", values)
-    # while "" in values:
-    #     values.remove("")
-    # print("values after:", values)
+
     error = ""
     goodv = []
     badv= []
-    badinput = []
-    badrange = []
-    badvalues = []
+    bad_input = []
+    bad_range = []
+    bad_values = []
 
     for v in values:
         match = pattern.findall(v)
-        # for m in match:
-        #     print("this is m:", m)
 
         if match:
             # range case x-y
@@ -179,56 +151,52 @@ def check_date_range(date, task, minVal, maxVal):
                 nums = v.split('-')
                 if int(nums[0]) > int(nums[1]):
                     badv.append(v)
-                    badvalues.append(v)
-                    error = error + f"{v} incorrect input, first number cannot be larger than the second."
+                    bad_values.append(v)
+                    #error = error + f"{v} incorrect input, first number cannot be larger than the second."
                     continue
 
                 if within_range(int(nums[0]), minVal, maxVal) and within_range(int(nums[1]), minVal, maxVal):
-                    #print("good range", nums)
                     goodv.append(v)
                 else:
                     badv.append(v)
-                    badrange.append(v)
-                    error = error + f"{v} not in the correct range. "
+                    bad_range.append(v)
+                    #error = error + f"{v} not in the correct range. "
 
             # single number case
             else:
                 if within_range(int(v), minVal, maxVal):
-                    #print("good range", v)
                     goodv.append(v)
                 else:
                     badv.append(v)
-                    badrange.append(v)
-                    error = error + f"{v} not in the correct range. "
+                    bad_range.append(v)
+                    #error = error + f"{v} not in the correct range. "
         else:
             badv.append(v)
-            badinput.append(v)
-            error = error + f"{v} is invalid. "
+            bad_input.append(v)
+            #error = error + f"{v} is invalid. "
 
-    badinput = ', '.join(badinput)
-    badrange = ', '.join(badrange)
-    badvalues = ', '.join(badvalues)
+    bad_input = ', '.join(bad_input)
+    bad_range = ', '.join(bad_range)
+    bad_values = ', '.join(bad_values)
 
-    error = f"{badinput} are invalid. {badrange} are not in the correct range. " \
-            f"{badvalues} first cannot be larger than second."
+    if bad_input:
+        error += f"{bad_input} : invalid input. "
+    if bad_range:
+        error += f"{bad_range} : not in the correct range. "
+    if bad_values:
+        error += f"{bad_values} : first cannot be larger than second."
 
-    print("this is error:", error)
-    print("goodv", goodv, len(goodv), "\nbadv", badv, len(badv))
-    print("task:", task, "values:", values, "length of values", len(values))
 
-    # if len(values) == 1:
-    #     if within_range(int(values[0]), minVal, maxVal):
-    #         return [True, "within range for 1 argument"]
-    #     else:
-    #         return [False, "Not within range"]
-    # elif len(values) == 2:
-    #     pass
-    # else:
-    #     return [False, "Invalid input"]
+    # error = f"{bad_input} : invalid input. {bad_range} : not in the correct range. " \
+    #         f"{bad_values} : first cannot be larger than second."
+
+    # print("this is error:", error)
+    # print("goodv", goodv, len(goodv), "\nbadv", badv, len(badv))
+    # print("task:", task, "values:", values, "length of values", len(values))
 
     if len(error) > 0:
         return [False, error]
-    print("made it to default true")
+    print("made it to bottom true for:", task)
     return [True]
 
 
@@ -237,50 +205,14 @@ def check_year(date, task):
     # must start and end with 4 digits
     pattern = re.compile(r'^\d{4}$')
     match = pattern.findall(date)
-    print("this is match:", match)
 
     if match:
         now = datetime.now()
         current_year = int(now.strftime("%Y"))
 
         if int(date) >= current_year:
-            return [True, f"{date} GE {current_year}"]
+            return [True]
         else:
             return [False, f"{date} LT {current_year}"]
     else:
-        return [False, "Not 4 digits"]
-
-
-# 1-12
-def check_month(task_dates, task_scheduler):
-    print(task_dates, task_scheduler)
-
-
-# 1-31
-def check_day(task_dates, task_scheduler):
-    print(task_dates, task_scheduler)
-
-
-# 1-53
-def check_week(task_dates, task_scheduler):
-    print(task_dates, task_scheduler)
-
-
-# 0-6 starts on monday
-def check_day_of_week(task_dates, task_scheduler):
-    print(task_dates, task_scheduler)
-
-
-# 0-23
-def check_hour(task_dates, task_scheduler):
-    print(task_dates, task_scheduler)
-
-
-# 0-59
-def check_minute(task_dates, task_scheduler):
-    print(task_dates, task_scheduler)
-
-
-# 0-59
-def check_second(task_dates, task_scheduler):
-    print(task_dates, task_scheduler)
+        return [False, f"{date} is not a 4 digit number"]
