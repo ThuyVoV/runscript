@@ -377,24 +377,31 @@ def script_detail(request, file_id):
             print("task dates", task_dates)
             valid = True
 
-
             # context['ooga'] = [False, "hello"]
             # print(context['task_scheduler'])
             for t in context['task_scheduler']:
                 print(context[t], context[t][0], type(context[t][0]))
 
             for t in context['task_scheduler']:
-                #print("this is:", t, context[t][0])
+                # print("this is:", t, context[t][0])
                 if not context[t][0]:
                     print("breaking on ", t)
                     valid = False
                     break
 
+            task_year, task_month, task_day, task_week, task_day_of_week, task_hour, task_minute, task_second \
+                = [task_dates[i] for i in range(len(task_dates))]
+
+            print(task_year, task_month, task_day, task_week, task_day_of_week, task_hour, task_minute, task_second)
+
             print("this is valid", valid)
 
-            # if valid:
-            # scheduler.add_job(rt.run_task, 'cron', args=args, id=context['script_name'].script_name,
-            #                   minute='12,18,14,15,16', replace_existing=True)
+            if valid:
+                scheduler.add_job(rt.run_task, 'cron', args=args, id=context['script_name'].script_name,
+                                  year=task_year, month=task_month, day=task_day,
+                                  week=task_week, day_of_week=task_day_of_week,
+                                  hour=task_hour, minute=task_minute, second=task_second,
+                                  replace_existing=True)
 
         # remove task tied to this script
         if request.POST.get("button_remove_task"):
@@ -461,6 +468,7 @@ def script_confirm_edit(request, file_id):
             return render(request, 'runscript/script_confirm_edit.html', context)
 
         if request.POST.get("button_edit_yes"):
+            # NO LONGER IN USE
             # new script name
             # if request.session.get('new_script_name') != '':
             #     new_script_name = request.session.get('new_script_name')
@@ -494,6 +502,15 @@ def script_confirm_edit(request, file_id):
 
                 upload.upload_file = url
                 upload.save()
+
+                # job = scheduler.get_job(job_id=context['script_name'].script_name)
+                # if job is not None:
+                #     job.modify()
+                #
+                #     args = [script_path, arguments, ext]
+                #     # if valid:
+                #     scheduler.add_job(rt.run_task, 'cron', args=args, id=context['script_name'].script_name,
+                #                       minute='3,4,5,6', replace_existing=True)
 
                 try:
                     del request.session['new_file_name']
