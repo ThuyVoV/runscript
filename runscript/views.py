@@ -21,6 +21,8 @@ import sys
 import os
 import shlex
 
+from django.db import connection
+import datetime
 
 # create an empty lists that will hold scripts
 @login_required(login_url='/login/')
@@ -411,6 +413,18 @@ def script_detail(request, file_id):
                 job.remove()
             else:
                 print("job doesnt exist")
+
+    name = context['script_name'].script_name
+    with connection.cursor() as cursor:
+        cursor.execute(f"SELECT next_run_time FROM apscheduler_jobs where id = '{name}'")
+        row = cursor.fetchone()
+
+    print("this is the query", row, type(row))
+    if row is not None:
+        epoch_time = int(row[0])
+        next_run = datetime.datetime.fromtimestamp(epoch_time)
+        context['next_run'] = next_run.strftime('%a %b %d, %Y %-I:%M:%S %p')
+
 
     context['fileContent'] = vh.get_file_content(context['script_name'].upload_file.path)
     context['output'] = output

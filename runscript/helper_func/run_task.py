@@ -14,9 +14,7 @@ def run_task(*args):
     path = args[0]
     arguments = args[1]
     ext = args[2]
-    print('path', path)
-    print('arg', arguments)
-    print("date and time =", dt_string)
+    print('path', path, "@", dt_string)
 
     t = open(get_temp(), 'w')
 
@@ -82,18 +80,18 @@ def parse_date(date):
 
     # split everything by comma
     date = date.split(',')
-    #print("values before:", date)
+    # print("values before:", date)
     while "" in date:
         date.remove("")
     # strip leading 0, removing extra spaces
     date = [d.strip(' ') for d in date]
     date = [d.lstrip('0') or '0' for d in date]
-    #date = [d.strip(' ') for d in date]
+    date = ['0' + d if d.startswith('-') else d for d in date]
 
     # remove empty strings (e,g user input ,,,,)
     while "" in date:
         date.remove("")
-    #print("values after:", date)
+    # print("values after:", date)
 
     # remove duplicates
     date = list(set(date))
@@ -137,10 +135,12 @@ def check_date_range(date, task, minVal, maxVal):
 
     error = ""
     goodv = []
-    badv= []
+    badv = []
     bad_input = []
     bad_range = []
     bad_values = []
+
+    print("values", values)
 
     for v in values:
         match = pattern.findall(v)
@@ -152,7 +152,7 @@ def check_date_range(date, task, minVal, maxVal):
                 if int(nums[0]) > int(nums[1]):
                     badv.append(v)
                     bad_values.append(v)
-                    #error = error + f"{v} incorrect input, first number cannot be larger than the second."
+                    # error = error + f"{v} incorrect input, first number cannot be larger than the second."
                     continue
 
                 if within_range(int(nums[0]), minVal, maxVal) and within_range(int(nums[1]), minVal, maxVal):
@@ -160,7 +160,7 @@ def check_date_range(date, task, minVal, maxVal):
                 else:
                     badv.append(v)
                     bad_range.append(v)
-                    #error = error + f"{v} not in the correct range. "
+                    # error = error + f"{v} not in the correct range. "
 
             # single number case
             else:
@@ -169,11 +169,11 @@ def check_date_range(date, task, minVal, maxVal):
                 else:
                     badv.append(v)
                     bad_range.append(v)
-                    #error = error + f"{v} not in the correct range. "
+                    # error = error + f"{v} not in the correct range. "
         else:
             badv.append(v)
             bad_input.append(v)
-            #error = error + f"{v} is invalid. "
+            # error = error + f"{v} is invalid. "
 
     bad_input = ', '.join(bad_input)
     bad_range = ', '.join(bad_range)
@@ -185,7 +185,6 @@ def check_date_range(date, task, minVal, maxVal):
         error += f"{bad_range} : not in the correct range. "
     if bad_values:
         error += f"{bad_values} : first cannot be larger than second."
-
 
     # error = f"{bad_input} : invalid input. {bad_range} : not in the correct range. " \
     #         f"{bad_values} : first cannot be larger than second."

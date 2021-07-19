@@ -23,7 +23,11 @@
                     {% csrf_token %}
                     Enter arguments here
                     <input type="text" name="arguments">
-                    <input type="submit" value="Run this script" name="button_run_script"/> <br><br>
+                    <input type="submit" value="Run this script" name="button_run_script"/><br><br>
+                    {% if next_run %}
+                        Next scheduled run time is: {{ next_run }}<br><br>
+                    {% endif %}
+
 
                     Year: <input type="text" name="task_year" placeholder="4-digit year" value="{{ task_dates_original.0 }}"> {{ task_year.1 }}<br>
                     Month: <input type="text" name="task_month" placeholder="1-12" value="{{ task_dates_original.1 }}"> {{ task_month.1 }}<br>
@@ -38,7 +42,7 @@
                         {{ ooga.1 }}
                         {% endif %}
                     <br>
-                    <input type="submit" value="Task Scheduler" name="button_task_schedule"/>
+                    <input type="submit" value="{% if next_run %}Reschedule Task{% else %}Schedule Task{% endif %}" name="button_task_schedule"/>
                     <input type="submit" value="Remove Task" name="button_remove_task"/> <br><br>
                 </form>
             {% endif %}
