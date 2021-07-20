@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
+from django.db import connection
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.utils.decorators import method_decorator
@@ -16,13 +17,12 @@ from .helper_func.decorators import AccessCheck
 from .helper_func import view_helper as vh
 from .helper_func import run_task as rt
 
+import datetime
 import subprocess
 import sys
 import os
 import shlex
 
-from django.db import connection
-import datetime
 
 # create an empty lists that will hold scripts
 @login_required(login_url='/login/')
@@ -405,6 +405,15 @@ def script_detail(request, file_id):
                                   hour=task_hour, minute=task_minute, second=task_second,
                                   replace_existing=True)
 
+                # script_list.scriptlog_set.create(person=request.user, action=script_log)
+
+                context['script_name'].filetask_set.create(
+                    file_task_id=context['script_name'].script_name,
+                    task_year=task_year, task_month=task_month, task_day=task_day,
+                    task_week=task_week, task_day_of_week=task_day_of_week,
+                    task_hour=task_hour, task_minute=task_minute, task_second=task_second
+                )
+
         # remove task tied to this script
         if request.POST.get("button_remove_task"):
 
@@ -424,7 +433,6 @@ def script_detail(request, file_id):
         epoch_time = int(row[0])
         next_run = datetime.datetime.fromtimestamp(epoch_time)
         context['next_run'] = next_run.strftime('%a %b %d, %Y %-I:%M:%S %p')
-
 
     context['fileContent'] = vh.get_file_content(context['script_name'].upload_file.path)
     context['output'] = output

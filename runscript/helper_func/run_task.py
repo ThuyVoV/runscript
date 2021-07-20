@@ -83,7 +83,7 @@ def parse_date(date):
     # print("values before:", date)
     while "" in date:
         date.remove("")
-    # strip leading 0, removing extra spaces
+    # removing extra spaces, strip leading 0
     date = [d.strip(' ') for d in date]
     date = [d.lstrip('0') or '0' for d in date]
     date = ['0' + d if d.startswith('-') else d for d in date]
@@ -98,17 +98,15 @@ def parse_date(date):
     date.sort()
 
     # sort inputs based on integer or range
-    single = []
-    double = []
+    single, double = [], []
     for d in date:
         if '-' in d:
             double.append(d)
         else:
             single.append(d)
 
-    date = single + double
-
     # concatenate everything back
+    date = single + double
     date = ",".join(date)
     print("this is date", date)
 

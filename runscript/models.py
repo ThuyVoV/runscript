@@ -25,6 +25,18 @@ class ScriptLog(models.Model):
         return self.action
 
 
+class TaskLog(models.Model):
+    script_list = models.ForeignKey(ScriptList, on_delete=models.CASCADE, null=True)
+
+    task_id = models.CharField(max_length=100, default='')
+    time_ran = models.CharField(max_length=100, default='')
+
+    task_output = models.TextField()
+
+    def __str__(self):
+        return self.task_id + self.time_ran
+
+
 class UploadFileModel(models.Model):
     script_list = models.ForeignKey(ScriptList, on_delete=models.CASCADE, null=True)
     script_name = models.CharField(max_length=50, default='', unique=True)
@@ -36,3 +48,23 @@ class UploadFileModel(models.Model):
 
     def __str__(self):
         return self.script_name
+
+
+class FileTask(models.Model):
+    upload_file_model = models.ForeignKey(UploadFileModel, on_delete=models.CASCADE, null=True)
+
+    file_task_id = models.CharField(max_length=100, default='')
+    last_run = models.CharField(max_length=100, default='')
+    next_run = models.CharField(max_length=100, default='')
+
+    task_year = models.CharField(max_length=100, default='')
+    task_month = models.CharField(max_length=100, default='')
+    task_week = models.CharField(max_length=100, default='')
+    task_day = models.CharField(max_length=100, default='')
+    task_day_of_week = models.CharField(max_length=100, default='')
+    task_hour = models.CharField(max_length=100, default='')
+    task_minute = models.CharField(max_length=100, default='')
+    task_second = models.CharField(max_length=100, default='')
+
+    def __str__(self):
+        return self.file_task_id + " schedule"
