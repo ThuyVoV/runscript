@@ -14,7 +14,8 @@ def run_task(*args):
     path = args[0]
     arguments = args[1]
     ext = args[2]
-    print('path', path, "@", dt_string)
+    script_name = args[3]
+    print('script name:', script_name, 'path', path, "@", dt_string)
 
     t = open(get_temp(), 'w')
 
@@ -26,23 +27,13 @@ def run_task(*args):
 
 
 def validate_dates(task_dates, context):
-    # task_scheduler = [
-    #     "task_year", "task_month", "task_day",
-    #     "task_week", "task_day_of_week",
-    #     "task_hour", "task_minute", "task_second"
-    # ]
-    #
-    # # creates context for each date input and assumes false before validations
-    # for task in task_scheduler:
-    #     context[task] = [False, '']  # f"this is the task_scheduler for: {task}"]
-
-    # for task in task_scheduler:
-    #     print(context[task][1])
-
     # if any entry is left blank, replace it with a *
     for i, date in enumerate(task_dates):
         if date == '':
-            task_dates[i] = '*'
+            if i != 7:
+                task_dates[i] = '*'
+            else:
+                task_dates[i] = '0'
 
     # task_date[i] is the input string for the field
     # task_scheduler[i] is the name of the input field (task_year, task_month, etc)

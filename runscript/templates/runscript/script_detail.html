@@ -2,15 +2,15 @@
 
 {% block title %} Script Detail Page{% endblock title %}
 {% block content %}
-    <form action="{% url 'runscript:view_and_upload' script_name.script_list_id %}" method="get">
+    <form action="{% url 'runscript:view_and_upload' file.script_list_id %}" method="get">
         <input type="submit" value="Back"/>
     </form>
     {#<button onclick=window.history.back()>Go Back</button>#}
     {% if can_view %}
-        the script name is {{ script_name }} <br>
-        the url is {{ script_name.upload_file.url }} <br>
-        the path is {{ script_name.upload_file.path }} <br>
-        the date added is {{ script_name.date_added }}
+        the script name is {{ file }} <br>
+        the url is {{ file.upload_file.url }} <br>
+        the path is {{ file.upload_file.path }} <br>
+        the date added is {{ file.date_added }}
         the file contains: <br>
 
         <!-- display script's code -->
@@ -19,7 +19,7 @@
         <!-- create button to run the script and display it -->
         {% if can_edit or can_run %}
             {% if can_run %}
-                <form action="{% url 'runscript:detail' script_name.id %}" method="POST">
+                <form action="{% url 'runscript:detail' file.id %}" method="POST">
                     {% csrf_token %}
                     Enter arguments here
                     <input type="text" name="arguments">
@@ -43,12 +43,16 @@
                         {% endif %}
                     <br>
                     <input type="submit" value="{% if next_run %}Reschedule Task{% else %}Schedule Task{% endif %}" name="button_task_schedule"/>
-                    <input type="submit" value="Remove Task" name="button_remove_task"/> <br><br>
+
+                    {% if next_run %}
+                        <input type="submit" value="Remove Task" name="button_remove_task"/>
+                    {% endif %}
+                <br><br>
                 </form>
             {% endif %}
 
             {% if can_edit %}
-                <form action="{% url 'runscript:change' script_name.id %}" method="POST">
+                <form action="{% url 'runscript:change' file.id %}" method="POST">
                     {% csrf_token %}
                     <input type="submit" value="Edit this script"/>
                 </form><br>

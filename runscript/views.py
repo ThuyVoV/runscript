@@ -9,7 +9,7 @@ from django.shortcuts import render, redirect
 from django.utils.decorators import method_decorator
 from django.views.generic.list import ListView
 
-from .models import UploadFileModel, ScriptList
+from .models import UploadFileModel, ScriptList, FileTask
 from .forms import UploadFileForm, CreateScriptListForm
 from .scheduler import scheduler
 
@@ -321,7 +321,7 @@ def script_detail(request, file_id):
     script_list = vh.get_list(file_id=file_id)
     output = []
     context = {
-        'script_name': UploadFileModel.objects.get(pk=file_id),
+        'file': UploadFileModel.objects.get(pk=file_id),
     }
 
     vh.get_perms(request, script_list, context)
@@ -334,7 +334,7 @@ def script_detail(request, file_id):
         # get arguments separated by space and quotes example:
         # 123 "hello there" 456 -> ['123', 'hello there', 456']
         arguments = shlex.split(args)
-        script_path = context['script_name'].upload_file.path
+        script_path = context['file'].upload_file.path
         ext = script_path.split('.')[-1]
 
         # run script on the page
@@ -353,7 +353,7 @@ def script_detail(request, file_id):
 
         # schedule the task with the selected date values
         if request.POST.get("button_task_schedule"):
-            args = [script_path, arguments, ext]
+            args = [script_path, arguments, ext, context['file'].script_name]
 
             context['task_scheduler'] = [
                 "task_year", "task_month", "task_day",
@@ -399,7 +399,7 @@ def script_detail(request, file_id):
             print("this is valid", valid)
 
             if valid:
-                scheduler.add_job(rt.run_task, 'cron', args=args, id=context['script_name'].script_name,
+                scheduler.add_job(rt.run_task, 'cron', args=args, id=context['file'].script_name,
                                   year=task_year, month=task_month, day=task_day,
                                   week=task_week, day_of_week=task_day_of_week,
                                   hour=task_hour, minute=task_minute, second=task_second,
@@ -407,34 +407,44 @@ def script_detail(request, file_id):
 
                 # script_list.scriptlog_set.create(person=request.user, action=script_log)
 
-                context['script_name'].filetask_set.create(
-                    file_task_id=context['script_name'].script_name,
-                    task_year=task_year, task_month=task_month, task_day=task_day,
-                    task_week=task_week, task_day_of_week=task_day_of_week,
-                    task_hour=task_hour, task_minute=task_minute, task_second=task_second
+                # context['file'].filetask_set.update_or_create(
+                #     file_task_id=context['file'].script_name,
+                #     task_year=task_year, task_month=task_month, task_day=task_day,
+                #     task_week=task_week, task_day_of_week=task_day_of_week,
+                #     task_hour=task_hour, task_minute=task_minute, task_second=task_second
+                # )
+
+                context['file'].filetask_set.update_or_create(
+                    file_task_id=context['file'].script_name,
+                    defaults={
+                        'task_year': task_year, 'task_month': task_month, 'task_day': task_day,
+                        'task_week': task_week, 'task_day_of_week': task_day_of_week,
+                        'task_hour': task_hour, 'task_minute': task_minute, 'task_second': task_second}
                 )
 
         # remove task tied to this script
         if request.POST.get("button_remove_task"):
 
-            job = scheduler.get_job(job_id=context['script_name'].script_name)
+            if FileTask.objects.filter(file_task_id=context['file'].script_name).exists():
+                context['file'].filetask_set.get(file_task_id=context['file'].script_name).delete()
+
+            job = scheduler.get_job(job_id=context['file'].script_name)
             if job is not None:
                 job.remove()
-            else:
-                print("job doesnt exist")
 
-    name = context['script_name'].script_name
+    # get the time of next task run
+    name = context['file'].script_name
     with connection.cursor() as cursor:
         cursor.execute(f"SELECT next_run_time FROM apscheduler_jobs where id = '{name}'")
         row = cursor.fetchone()
 
-    print("this is the query", row, type(row))
+    # print("this is the query", row, type(row))
     if row is not None:
         epoch_time = int(row[0])
         next_run = datetime.datetime.fromtimestamp(epoch_time)
         context['next_run'] = next_run.strftime('%a %b %d, %Y %-I:%M:%S %p')
 
-    context['fileContent'] = vh.get_file_content(context['script_name'].upload_file.path)
+    context['fileContent'] = vh.get_file_content(context['file'].upload_file.path)
     context['output'] = output
 
     return render(request, 'runscript/script_detail.html', context)
