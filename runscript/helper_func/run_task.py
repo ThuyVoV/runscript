@@ -1,21 +1,39 @@
 import re
 import subprocess
 import sys
-from datetime import datetime
-
+import datetime
+from django.db import connection
 from .view_helper import get_temp
+
+'''
+def run_task(func):
+    def wrapper(*args, **kwargs):
+        print("\nbefore func call", func.__name__)
+        print("blah blah blah run task with these args:\n", args, kwargs)
+        return func(*args, **kwargs)
+
+    return wrapper
+
+@run_task
+def get_task(name,arg,path,ext):
+    print("now i log")
+
+
+get_task("scriptname", 'arguments', "d/d/d/d/d/a", '.py')
+
+'''
 
 
 def run_task(*args):
-    now = datetime.now()
+    now = datetime.datetime.now()
     # dd/mm/YY H:M:S
-    dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
+    dt_string = now.strftime('%a %b %d, %Y %-I:%M:%S %p')
 
     path = args[0]
     arguments = args[1]
     ext = args[2]
     script_name = args[3]
-    print('script name:', script_name, 'path', path, "@", dt_string)
+    print('script name:', script_name, 'path', path, "@", dt_string, '-', get_next_run_time(script_name))
 
     t = open(get_temp(), 'w')
 
@@ -99,7 +117,7 @@ def parse_date(date):
     # concatenate everything back
     date = single + double
     date = ",".join(date)
-    print("this is date", date)
+    # print("this is date", date)
 
     return date
 
@@ -129,7 +147,7 @@ def check_date_range(date, task, minVal, maxVal):
     bad_range = []
     bad_values = []
 
-    print("values", values)
+    #print("values", values)
 
     for v in values:
         match = pattern.findall(v)
@@ -184,7 +202,7 @@ def check_date_range(date, task, minVal, maxVal):
 
     if len(error) > 0:
         return [False, error]
-    print("made it to bottom true for:", task)
+
     return [True]
 
 
@@ -204,3 +222,19 @@ def check_year(date, task):
             return [False, f"{date} LT {current_year}"]
     else:
         return [False, f"{date} is not a 4 digit number"]
+
+
+def get_next_run_time(name):
+    # get the time of next task run
+    #name = context['file'].script_name
+    with connection.cursor() as cursor:
+        cursor.execute(f"SELECT next_run_time FROM apscheduler_jobs where id = '{name}'")
+        row = cursor.fetchone()
+
+    # print("this is the query", row, type(row))
+    if row is not None:
+        epoch_time = int(row[0])
+        next_run = datetime.datetime.fromtimestamp(epoch_time)
+        return next_run.strftime('%a %b %d, %Y %-I:%M:%S %p')
+
+    return None

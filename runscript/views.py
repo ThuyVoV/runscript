@@ -375,14 +375,11 @@ def script_detail(request, file_id):
 
             print(context['task_dates_original'])
             rt.validate_dates(task_dates, context)
-            print("ct task dates", context['task_dates_original'])
             print("task dates", task_dates)
             valid = True
 
-            # context['ooga'] = [False, "hello"]
-            # print(context['task_scheduler'])
             for t in context['task_scheduler']:
-                print(context[t], context[t][0], type(context[t][0]))
+                print(context[t], context[t][0])
 
             for t in context['task_scheduler']:
                 # print("this is:", t, context[t][0])
@@ -394,9 +391,7 @@ def script_detail(request, file_id):
             task_year, task_month, task_day, task_week, task_day_of_week, task_hour, task_minute, task_second \
                 = [task_dates[i] for i in range(len(task_dates))]
 
-            print(task_year, task_month, task_day, task_week, task_day_of_week, task_hour, task_minute, task_second)
-
-            print("this is valid", valid)
+            #print(task_year, task_month, task_day, task_week, task_day_of_week, task_hour, task_minute, task_second)
 
             if valid:
                 scheduler.add_job(rt.run_task, 'cron', args=args, id=context['file'].script_name,
@@ -432,17 +427,18 @@ def script_detail(request, file_id):
             if job is not None:
                 job.remove()
 
-    # get the time of next task run
-    name = context['file'].script_name
-    with connection.cursor() as cursor:
-        cursor.execute(f"SELECT next_run_time FROM apscheduler_jobs where id = '{name}'")
-        row = cursor.fetchone()
-
-    # print("this is the query", row, type(row))
-    if row is not None:
-        epoch_time = int(row[0])
-        next_run = datetime.datetime.fromtimestamp(epoch_time)
-        context['next_run'] = next_run.strftime('%a %b %d, %Y %-I:%M:%S %p')
+    # # get the time of next task run
+    # name = context['file'].script_name
+    # with connection.cursor() as cursor:
+    #     cursor.execute(f"SELECT next_run_time FROM apscheduler_jobs where id = '{name}'")
+    #     row = cursor.fetchone()
+    #
+    # # print("this is the query", row, type(row))
+    # if row is not None:
+    #     epoch_time = int(row[0])
+    #     next_run = datetime.datetime.fromtimestamp(epoch_time)
+    #     context['next_run'] = next_run.strftime('%a %b %d, %Y %-I:%M:%S %p')
+    context['next_run'] = rt.get_next_run_time(context['file'].script_name)
 
     context['fileContent'] = vh.get_file_content(context['file'].upload_file.path)
     context['output'] = output
