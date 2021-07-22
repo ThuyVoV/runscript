@@ -3,9 +3,7 @@ from django.db import connection
 
 from functools import wraps
 
-from ..models import UploadFileModel, ScriptList, FileTask
-
-from .view_helper import get_temp
+from ..models import UploadFileModel, ScriptList
 
 import re
 import subprocess
@@ -14,33 +12,12 @@ import datetime
 import time
 
 
-'''
-def run_task(func):
-    def wrapper(*args, **kwargs):
-        print("\nbefore func call", func.__name__)
-        print("blah blah blah run task with these args:\n", args, kwargs)
-        return func(*args, **kwargs)
-
-    return wrapper
-
-@run_task
-def get_task(name,arg,path,ext):
-    print("now i log")
-
-
-get_task("scriptname", 'arguments', "d/d/d/d/d/a", '.py')
-
-'''
-
-
 def get_next_run_time(name):
     # get the time of next task run
-
     with connection.cursor() as cursor:
         cursor.execute(f"SELECT next_run_time FROM apscheduler_jobs where id = '{name}'")
         row = cursor.fetchone()
 
-    # print("this is the query", row, type(row))
     if row is not None:
         epoch_time = int(row[0])
         return datetime.datetime.fromtimestamp(epoch_time).strftime('%a %b %d, %Y %-I:%M:%S %p')
@@ -69,13 +46,14 @@ def run_task(func):
             subprocess.run([sys.executable, script_path] + arguments, text=True, stdout=t)
         t.close()
 
+        # read the log output in the file
         t = open(log_location, 'r')
         log = t.read()
         t.close()
 
+        # create a log in the database
         script_list_id = UploadFileModel.objects.get(pk=upload_file.id).script_list_id
         script_list = ScriptList.objects.get(pk=script_list_id)
-
         script_list.tasklog_set.create(task_id=script_name, time_ran=current_time, task_output=log)
 
         return func(*args, **kwargs)
@@ -88,12 +66,10 @@ def do_task(*args):
     time.sleep(.05)
     upload_file = args[0]
 
-    upload_file.filetask_set.update_or_create(
-        file_task_id=upload_file.script_name,
-        defaults={
-            'last_run': datetime.datetime.now().strftime('%a %b %d, %Y %-I:%M:%S %p'),
-            'next_run': get_next_run_time(upload_file.script_name)
-        }
+    # update the last_run and next_run values
+    upload_file.filetask_set.filter(file_task_name=upload_file.script_name).update(
+        last_run=datetime.datetime.now().strftime('%a %b %d, %Y %-I:%M:%S %p'),
+        next_run=get_next_run_time(upload_file.script_name)
     )
 
 
@@ -105,7 +81,7 @@ def validate_dates(task_dates, context):
                 task_dates[i] = '*'
             else:
                 task_dates[i] = '0'
-                
+
     month_min, month_max = 1, 12
     day_min, day_max = 1, 31
     week_min, week_max = 1, 53
@@ -113,7 +89,6 @@ def validate_dates(task_dates, context):
     hour_min, hour_max = 0, 23
     minute_min, minute_max = 0, 59
     second_min, second_max = 0, 59
-    
 
     # task_date[i] is the input string for the field
     # task_scheduler[i] is the name of the input field (task_year, task_month, etc)
@@ -131,9 +106,10 @@ def validate_dates(task_dates, context):
         elif i == 2:  # day
             context[task] = check_date_range(task_dates[i], context['task_scheduler'][i], day_min, day_max)
         elif i == 3:  # week
-            context[task] = check_date_range(task_dates[i], context['task_scheduler'][i], week_min, week_min)
+            context[task] = check_date_range(task_dates[i], context['task_scheduler'][i], week_min, week_max)
         elif i == 4:  # day of week
-            context[task] = check_date_range(task_dates[i], context['task_scheduler'][i], day_of_week_min, day_of_week_max)
+            context[task] = check_date_range(task_dates[i], context['task_scheduler'][i], day_of_week_min,
+                                             day_of_week_max)
         elif i == 5:  # hour
             context[task] = check_date_range(task_dates[i], context['task_scheduler'][i], hour_min, hour_max)
         elif i == 6:  # minute
@@ -142,8 +118,6 @@ def validate_dates(task_dates, context):
             context[task] = check_date_range(task_dates[i], context['task_scheduler'][i], second_min, second_max)
 
 
-# 1,,,,2-3,,,5-6, 00,002,02, 3,3,5,7,7,0007,14 , 200, -1,           ,
-# 00,002,02, 3,3,5,7,7,0007
 def parse_date(date):
     # remove ending comma
     if date[-1] == ',':
@@ -151,18 +125,16 @@ def parse_date(date):
 
     # split everything by comma
     date = date.split(',')
-    # print("values before:", date)
+
     while "" in date:
         date.remove("")
-    # removing extra spaces, strip leading 0
+    # removing extra spaces, strip leading 0, remove empty strings
     date = [d.strip(' ') for d in date]
     date = [d.lstrip('0') or '0' for d in date]
     date = ['0' + d if d.startswith('-') else d for d in date]
 
-    # remove empty strings (e,g user input ,,,,)
     while "" in date:
         date.remove("")
-    # print("values after:", date)
 
     # remove duplicates
     date = list(set(date))
@@ -179,7 +151,6 @@ def parse_date(date):
     # concatenate everything back
     date = single + double
     date = ",".join(date)
-    # print("this is date", date)
 
     return date
 
@@ -191,58 +162,38 @@ def within_range(value, minVal, maxVal):
     return False
 
 
-# 0,1,5,8,13,14
-
-# 1,,,2-3,,,5-6, 00,002,02, 3,3,5,7,7,0007,14 , 200, -1, !,@,#,$,lmao, 8-4 ,123-577 , 11-14//,10-12,// ,   0-6    ,
-# ^\d{1,2}(\-\d{1,2})?$
 def check_date_range(date, task, minVal, maxVal):
     # pattern, must be a 1 or 2 digit integer
     # if it is a range of number, the two numbers must be separated by a dash
     pattern = re.compile(r'^\d{1,2}(?:\-\d{1,2})?$')
-
     values = date.split(',')
-
     error = ""
-    goodv = []
-    badv = []
-    bad_input = []
-    bad_range = []
-    bad_values = []
 
-    #print("values", values)
+    bad_input, bad_range, bad_values = [], [], []
 
     for v in values:
         match = pattern.findall(v)
-
         if match:
             # range case x-y
             if '-' in v:
                 nums = v.split('-')
                 if int(nums[0]) > int(nums[1]):
-                    badv.append(v)
                     bad_values.append(v)
-                    # error = error + f"{v} incorrect input, first number cannot be larger than the second."
                     continue
 
                 if within_range(int(nums[0]), minVal, maxVal) and within_range(int(nums[1]), minVal, maxVal):
-                    goodv.append(v)
+                    continue
                 else:
-                    badv.append(v)
                     bad_range.append(v)
-                    # error = error + f"{v} not in the correct range. "
 
             # single number case
             else:
                 if within_range(int(v), minVal, maxVal):
-                    goodv.append(v)
+                    continue
                 else:
-                    badv.append(v)
                     bad_range.append(v)
-                    # error = error + f"{v} not in the correct range. "
         else:
-            badv.append(v)
             bad_input.append(v)
-            # error = error + f"{v} is invalid. "
 
     bad_input = ', '.join(bad_input)
     bad_range = ', '.join(bad_range)
@@ -254,13 +205,6 @@ def check_date_range(date, task, minVal, maxVal):
         error += f"{bad_range} : not in the correct range. "
     if bad_values:
         error += f"{bad_values} : first cannot be larger than second."
-
-    # error = f"{bad_input} : invalid input. {bad_range} : not in the correct range. " \
-    #         f"{bad_values} : first cannot be larger than second."
-
-    # print("this is error:", error)
-    # print("goodv", goodv, len(goodv), "\nbadv", badv, len(badv))
-    # print("task:", task, "values:", values, "length of values", len(values))
 
     if len(error) > 0:
         return [False, error]
@@ -275,7 +219,7 @@ def check_year(date, task):
     match = pattern.findall(date)
 
     if match:
-        now = datetime.now()
+        now = datetime.datetime.now()
         current_year = int(now.strftime("%Y"))
 
         if int(date) >= current_year:
@@ -284,6 +228,3 @@ def check_year(date, task):
             return [False, f"{date} LT {current_year}"]
     else:
         return [False, f"{date} is not a 4 digit number"]
-
-
-

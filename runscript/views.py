@@ -323,6 +323,11 @@ def script_detail(request, file_id):
     }
 
     vh.get_perms(request, script_list, context)
+    context['task_scheduler'] = [
+        "task_year", "task_month", "task_day",
+        "task_week", "task_day_of_week",
+        "task_hour", "task_minute", "task_second"
+    ]
 
     # when they click run script, call the script with argument
     # write the output to a temp file to display it on screen, delete temp file
@@ -351,14 +356,7 @@ def script_detail(request, file_id):
 
         # schedule the task with the selected date values
         if request.POST.get("button_task_schedule"):
-            #args = [script_path, arguments, ext, context['file'].script_name]
             args = [context['file'], arguments, ext]
-
-            context['task_scheduler'] = [
-                "task_year", "task_month", "task_day",
-                "task_week", "task_day_of_week",
-                "task_hour", "task_minute", "task_second"
-            ]
 
             context['task_dates_original'] = []
             task_dates = []
@@ -400,25 +398,30 @@ def script_detail(request, file_id):
                                   replace_existing=True)
 
                 context['file'].filetask_set.update_or_create(
-                    file_task_id=context['file'].script_name,
+                    file_task_name=context['file'].script_name,
                     defaults={
+                        'next_run': rt.get_next_run_time(context['file'].script_name),
                         'task_year': task_year, 'task_month': task_month, 'task_day': task_day,
                         'task_week': task_week, 'task_day_of_week': task_day_of_week,
                         'task_hour': task_hour, 'task_minute': task_minute, 'task_second': task_second
                     }
                 )
 
+
         # remove task tied to this script
         if request.POST.get("button_remove_task"):
 
-            if FileTask.objects.filter(file_task_id=context['file'].script_name).exists():
-                context['file'].filetask_set.get(file_task_id=context['file'].script_name).delete()
+            if FileTask.objects.filter(file_task_name=context['file'].script_name).exists():
+                context['file'].filetask_set.get(file_task_name=context['file'].script_name).delete()
 
             job = scheduler.get_job(job_id=context['file'].script_name)
             if job is not None:
                 job.remove()
 
-    context['next_run'] = rt.get_next_run_time(context['file'].script_name)
+    if FileTask.objects.filter(file_task_name=context['file'].script_name).exists():
+        file_task = context['file'].filetask_set.get(file_task_name=context['file'].script_name)
+        context['last_run'] = file_task.last_run
+        context['next_run'] = file_task.next_run
 
     context['fileContent'] = vh.get_file_content(context['file'].upload_file.path)
     context['output'] = output

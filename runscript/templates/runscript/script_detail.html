@@ -24,10 +24,12 @@
                     Enter arguments here
                     <input type="text" name="arguments">
                     <input type="submit" value="Run this script" name="button_run_script"/><br><br>
-                    {% if next_run %}
-                        Next scheduled run time is: {{ next_run }}<br><br>
+                    {% if last_run %}
+                        Last ran on: {{ last_run }}<br>
                     {% endif %}
-
+                    {% if next_run %}
+                        Next run time is: {{ next_run }}<br><br>
+                    {% endif %}
 
                     Year: <input type="text" name="task_year" placeholder="4-digit year" value="{{ task_dates_original.0 }}"> {{ task_year.1 }}<br>
                     Month: <input type="text" name="task_month" placeholder="1-12" value="{{ task_dates_original.1 }}"> {{ task_month.1 }}<br>
@@ -38,15 +40,15 @@
                     Minute: <input type="text" name="task_minute" placeholder="0-59" value="{{ task_dates_original.6 }}"> {{ task_minute.1 }}<br>
                     Second: <input type="text" name="task_second" placeholder="0-59" value="{{ task_dates_original.7 }}"> {{ task_second.1 }}<br>
 
-                    {% if ooga.0 == True %}
-                        {{ ooga.1 }}
-                        {% endif %}
+
                     <br>
                     <input type="submit" value="{% if next_run %}Reschedule Task{% else %}Schedule Task{% endif %}" name="button_task_schedule"/>
+
 
                     {% if next_run %}
                         <input type="submit" value="Remove Task" name="button_remove_task"/>
                     {% endif %}
+
                 <br><br>
                 </form>
             {% endif %}

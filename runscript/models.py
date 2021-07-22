@@ -53,7 +53,7 @@ class UploadFileModel(models.Model):
 class FileTask(models.Model):
     upload_file_model = models.ForeignKey(UploadFileModel, on_delete=models.CASCADE, null=True)
 
-    file_task_id = models.CharField(max_length=100, default='')
+    file_task_name = models.CharField(max_length=100, default='')
     last_run = models.CharField(max_length=100, default='')
     next_run = models.CharField(max_length=100, default='')
 
@@ -67,4 +67,4 @@ class FileTask(models.Model):
     task_second = models.CharField(max_length=100, default='')
 
     def __str__(self):
-        return self.file_task_id + " schedule"
+        return self.file_task_name + " schedule"
