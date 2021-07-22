@@ -3,25 +3,23 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
-from django.db import connection
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.utils.decorators import method_decorator
 from django.views.generic.list import ListView
 
-from .models import UploadFileModel, ScriptList, FileTask
 from .forms import UploadFileForm, CreateScriptListForm
+from .models import UploadFileModel, ScriptList, FileTask
 from .scheduler import scheduler
 
 from .helper_func.decorators import AccessCheck
 from .helper_func import view_helper as vh
 from .helper_func import run_task as rt
 
-import datetime
-import subprocess
-import sys
 import os
 import shlex
+import subprocess
+import sys
 
 
 # create an empty lists that will hold scripts
@@ -353,7 +351,8 @@ def script_detail(request, file_id):
 
         # schedule the task with the selected date values
         if request.POST.get("button_task_schedule"):
-            args = [script_path, arguments, ext, context['file'].script_name]
+            #args = [script_path, arguments, ext, context['file'].script_name]
+            args = [context['file'], arguments, ext]
 
             context['task_scheduler'] = [
                 "task_year", "task_month", "task_day",
@@ -394,27 +393,19 @@ def script_detail(request, file_id):
             #print(task_year, task_month, task_day, task_week, task_day_of_week, task_hour, task_minute, task_second)
 
             if valid:
-                scheduler.add_job(rt.run_task, 'cron', args=args, id=context['file'].script_name,
+                scheduler.add_job(rt.do_task, 'cron', args=args, id=context['file'].script_name,
                                   year=task_year, month=task_month, day=task_day,
                                   week=task_week, day_of_week=task_day_of_week,
                                   hour=task_hour, minute=task_minute, second=task_second,
                                   replace_existing=True)
-
-                # script_list.scriptlog_set.create(person=request.user, action=script_log)
-
-                # context['file'].filetask_set.update_or_create(
-                #     file_task_id=context['file'].script_name,
-                #     task_year=task_year, task_month=task_month, task_day=task_day,
-                #     task_week=task_week, task_day_of_week=task_day_of_week,
-                #     task_hour=task_hour, task_minute=task_minute, task_second=task_second
-                # )
 
                 context['file'].filetask_set.update_or_create(
                     file_task_id=context['file'].script_name,
                     defaults={
                         'task_year': task_year, 'task_month': task_month, 'task_day': task_day,
                         'task_week': task_week, 'task_day_of_week': task_day_of_week,
-                        'task_hour': task_hour, 'task_minute': task_minute, 'task_second': task_second}
+                        'task_hour': task_hour, 'task_minute': task_minute, 'task_second': task_second
+                    }
                 )
 
         # remove task tied to this script
@@ -427,17 +418,6 @@ def script_detail(request, file_id):
             if job is not None:
                 job.remove()
 
-    # # get the time of next task run
-    # name = context['file'].script_name
-    # with connection.cursor() as cursor:
-    #     cursor.execute(f"SELECT next_run_time FROM apscheduler_jobs where id = '{name}'")
-    #     row = cursor.fetchone()
-    #
-    # # print("this is the query", row, type(row))
-    # if row is not None:
-    #     epoch_time = int(row[0])
-    #     next_run = datetime.datetime.fromtimestamp(epoch_time)
-    #     context['next_run'] = next_run.strftime('%a %b %d, %Y %-I:%M:%S %p')
     context['next_run'] = rt.get_next_run_time(context['file'].script_name)
 
     context['fileContent'] = vh.get_file_content(context['file'].upload_file.path)

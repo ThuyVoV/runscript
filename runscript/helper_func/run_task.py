@@ -1,9 +1,18 @@
+from django.conf import settings
+from django.db import connection
+
+from functools import wraps
+
+from ..models import UploadFileModel, ScriptList, FileTask
+
+from .view_helper import get_temp
+
 import re
 import subprocess
 import sys
 import datetime
-from django.db import connection
-from .view_helper import get_temp
+import time
+
 
 '''
 def run_task(func):
@@ -24,24 +33,68 @@ get_task("scriptname", 'arguments', "d/d/d/d/d/a", '.py')
 '''
 
 
-def run_task(*args):
-    now = datetime.datetime.now()
-    # dd/mm/YY H:M:S
-    dt_string = now.strftime('%a %b %d, %Y %-I:%M:%S %p')
+def get_next_run_time(name):
+    # get the time of next task run
 
-    path = args[0]
-    arguments = args[1]
-    ext = args[2]
-    script_name = args[3]
-    print('script name:', script_name, 'path', path, "@", dt_string, '-', get_next_run_time(script_name))
+    with connection.cursor() as cursor:
+        cursor.execute(f"SELECT next_run_time FROM apscheduler_jobs where id = '{name}'")
+        row = cursor.fetchone()
 
-    t = open(get_temp(), 'w')
+    # print("this is the query", row, type(row))
+    if row is not None:
+        epoch_time = int(row[0])
+        return datetime.datetime.fromtimestamp(epoch_time).strftime('%a %b %d, %Y %-I:%M:%S %p')
 
-    if ext == 'sh':
-        subprocess.call(['sh', path] + arguments, stdout=t)
-    elif ext == 'py':
-        subprocess.run([sys.executable, path] + arguments, text=True, stdout=t)
-    t.close()
+    return None
+
+
+def run_task(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        # ex: Thu Jul 22, 2021 12:55:00 PM
+        current_time = datetime.datetime.now().strftime('%a %b %d, %Y %-I:%M:%S %p')
+
+        upload_file = args[0]
+        script_path = upload_file.upload_file.path
+        script_name = upload_file.script_name
+        arguments = args[1]
+        ext = args[2]
+        log_location = f"{settings.BASE_DIR}/runscript/scripts/logs/{script_name}_{current_time}_log.txt"
+        print('script name:', script_name, 'path', script_path, "@", current_time)
+
+        t = open(log_location, 'w')
+        if ext == 'sh':
+            subprocess.call(['sh', script_path] + arguments, stdout=t)
+        elif ext == 'py':
+            subprocess.run([sys.executable, script_path] + arguments, text=True, stdout=t)
+        t.close()
+
+        t = open(log_location, 'r')
+        log = t.read()
+        t.close()
+
+        script_list_id = UploadFileModel.objects.get(pk=upload_file.id).script_list_id
+        script_list = ScriptList.objects.get(pk=script_list_id)
+
+        script_list.tasklog_set.create(task_id=script_name, time_ran=current_time, task_output=log)
+
+        return func(*args, **kwargs)
+
+    return wrapper
+
+
+@run_task
+def do_task(*args):
+    time.sleep(.05)
+    upload_file = args[0]
+
+    upload_file.filetask_set.update_or_create(
+        file_task_id=upload_file.script_name,
+        defaults={
+            'last_run': datetime.datetime.now().strftime('%a %b %d, %Y %-I:%M:%S %p'),
+            'next_run': get_next_run_time(upload_file.script_name)
+        }
+    )
 
 
 def validate_dates(task_dates, context):
@@ -52,12 +105,21 @@ def validate_dates(task_dates, context):
                 task_dates[i] = '*'
             else:
                 task_dates[i] = '0'
+                
+    month_min, month_max = 1, 12
+    day_min, day_max = 1, 31
+    week_min, week_max = 1, 53
+    day_of_week_min, day_of_week_max = 0, 6
+    hour_min, hour_max = 0, 23
+    minute_min, minute_max = 0, 59
+    second_min, second_max = 0, 59
+    
 
     # task_date[i] is the input string for the field
     # task_scheduler[i] is the name of the input field (task_year, task_month, etc)
     for i, task in enumerate(context['task_scheduler']):
         if task_dates[i] == '*':
-            context[task] = [True, 'from *']
+            context[task] = [True]
             continue
 
         task_dates[i] = parse_date(task_dates[i])
@@ -65,19 +127,19 @@ def validate_dates(task_dates, context):
         if i == 0:  # year
             context[task] = check_year(task_dates[i], context['task_scheduler'][i])
         elif i == 1:  # month
-            context[task] = check_date_range(task_dates[i], context['task_scheduler'][i], 1, 12)
+            context[task] = check_date_range(task_dates[i], context['task_scheduler'][i], month_min, month_max)
         elif i == 2:  # day
-            context[task] = check_date_range(task_dates[i], context['task_scheduler'][i], 1, 31)
+            context[task] = check_date_range(task_dates[i], context['task_scheduler'][i], day_min, day_max)
         elif i == 3:  # week
-            context[task] = check_date_range(task_dates[i], context['task_scheduler'][i], 1, 53)
+            context[task] = check_date_range(task_dates[i], context['task_scheduler'][i], week_min, week_min)
         elif i == 4:  # day of week
-            context[task] = check_date_range(task_dates[i], context['task_scheduler'][i], 0, 6)
+            context[task] = check_date_range(task_dates[i], context['task_scheduler'][i], day_of_week_min, day_of_week_max)
         elif i == 5:  # hour
-            context[task] = check_date_range(task_dates[i], context['task_scheduler'][i], 0, 23)
+            context[task] = check_date_range(task_dates[i], context['task_scheduler'][i], hour_min, hour_max)
         elif i == 6:  # minute
-            context[task] = check_date_range(task_dates[i], context['task_scheduler'][i], 0, 59)
+            context[task] = check_date_range(task_dates[i], context['task_scheduler'][i], minute_min, minute_max)
         elif i == 7:  # second
-            context[task] = check_date_range(task_dates[i], context['task_scheduler'][i], 0, 59)
+            context[task] = check_date_range(task_dates[i], context['task_scheduler'][i], second_min, second_max)
 
 
 # 1,,,,2-3,,,5-6, 00,002,02, 3,3,5,7,7,0007,14 , 200, -1,           ,
@@ -224,17 +286,4 @@ def check_year(date, task):
         return [False, f"{date} is not a 4 digit number"]
 
 
-def get_next_run_time(name):
-    # get the time of next task run
-    #name = context['file'].script_name
-    with connection.cursor() as cursor:
-        cursor.execute(f"SELECT next_run_time FROM apscheduler_jobs where id = '{name}'")
-        row = cursor.fetchone()
 
-    # print("this is the query", row, type(row))
-    if row is not None:
-        epoch_time = int(row[0])
-        next_run = datetime.datetime.fromtimestamp(epoch_time)
-        return next_run.strftime('%a %b %d, %Y %-I:%M:%S %p')
-
-    return None
