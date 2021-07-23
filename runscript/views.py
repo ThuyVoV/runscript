@@ -578,15 +578,29 @@ def logs(request, list_id):
     script_list = ScriptList.objects.get(pk=list_id)
 
     context = {
-        'logs': script_list.scriptlog_set.all()[::-1],
+        # 'logs': script_list.scriptlog_set.all()[::-1],
+        'logs': script_list.tasklog_set.all()[::-1],
         'pk': list_id,
         'is_paginated': True
     }
 
     vh.get_perms(request, script_list, context)
 
-    display_amt = 10
-    paginator = Paginator(context['logs'], display_amt)
+    # context['logs'] = get_log_page(request, script_list.tasklog_set.all()[::-1])
+
+    if request.method == 'GET':
+        if request.GET.get("button_user_logs"):
+            print("im in here")
+            # context['logs'] = get_log_page(request, script_list.scriptlog_set.all()[::-1])
+            context['logs'] = script_list.scriptlog_set.all()[::-1]
+            return render(request, 'runscript/user_logs.html', context)
+
+    return render(request, 'runscript/task_logs.html', context)
+
+
+def get_log_page(request, log):
+    display_amt = 500
+    paginator = Paginator(log, display_amt)
     page_num = request.GET.get("page")
 
     try:
@@ -596,9 +610,7 @@ def logs(request, list_id):
     except EmptyPage:
         page = paginator.page(paginator.num_pages)
 
-    context['logs'] = page
-
-    return render(request, 'runscript/logs.html', context)
+    return page
 
 
 @method_decorator(login_required(login_url='/login/'), name='dispatch')

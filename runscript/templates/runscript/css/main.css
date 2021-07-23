@@ -1,7 +1,10 @@
 table {
     font-family: arial, sans-serif;
     border-collapse: collapse;
-    width: 100%;
+    width: 50%;
+    overflow-y: scroll;
+    height: 500px;
+    display: block;
 }
 
 td, th {
@@ -13,6 +16,7 @@ td, th {
 tr:nth-child(3n+0) {
     background-color: #dddddd;
 }
+
 tr:nth-child(3n+2) {
     background-color: #EEEEEE;
 }

@@ -33,6 +33,9 @@ class TaskLog(models.Model):
 
     task_output = models.TextField()
 
+    # class Meta:
+    #     ordering = ['time_ran']
+
     def __str__(self):
         return self.task_id + ' - ' + self.time_ran
 

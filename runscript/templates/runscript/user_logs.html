@@ -1,0 +1,19 @@
+{% extends "runscript/logs.html" %}
+{% block task_logs %}
+    <table class="table table-striped table-bordered">
+        <tr>
+            <th>Script</th>
+            <th>Date</th>
+            <th>Action</th>
+        </tr>
+        <tbody id="myTable">
+        {% for log in logs %}
+            <tr>
+                <td>{{ log.date_added }}</td>
+                <td>{{ log.person }}</td>
+                <td>{{ log.action|linebreaks }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock task_logs %}
