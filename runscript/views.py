@@ -364,12 +364,6 @@ def script_detail(request, file_id):
                 context['task_dates_original'].append(request.POST.get(t))
                 task_dates.append(request.POST.get(t))
 
-            # task_dates = [
-            #     request.POST.get("task_year"), request.POST.get("task_month"), request.POST.get("task_day"),
-            #     request.POST.get("task_week"), request.POST.get("task_day_of_week"),
-            #     request.POST.get("task_hour"), request.POST.get("task_minute"), request.POST.get("task_second")
-            # ]
-
             print(context['task_dates_original'])
             rt.validate_dates(task_dates, context)
             print("task dates", task_dates)
@@ -379,7 +373,6 @@ def script_detail(request, file_id):
                 print(context[t], context[t][0])
 
             for t in context['task_scheduler']:
-                # print("this is:", t, context[t][0])
                 if not context[t][0]:
                     print("breaking on ", t)
                     valid = False
@@ -388,8 +381,7 @@ def script_detail(request, file_id):
             task_year, task_month, task_day, task_week, task_day_of_week, task_hour, task_minute, task_second \
                 = [task_dates[i] for i in range(len(task_dates))]
 
-            #print(task_year, task_month, task_day, task_week, task_day_of_week, task_hour, task_minute, task_second)
-
+            # create tasks in scheduler and filetask in database
             if valid:
                 scheduler.add_job(rt.do_task, 'cron', args=args, id=context['file'].script_name,
                                   year=task_year, month=task_month, day=task_day,
@@ -406,6 +398,9 @@ def script_detail(request, file_id):
                         'task_hour': task_hour, 'task_minute': task_minute, 'task_second': task_second
                     }
                 )
+
+                if not os.path.exists(vh.get_logs_dir()):
+                    os.makedirs(vh.get_logs_dir())
 
 
         # remove task tied to this script

@@ -21,6 +21,10 @@ def get_temp():
     return f'{settings.BASE_DIR}/runscript/scripts/temp.txt'
 
 
+def get_logs_dir():
+    return f'{settings.BASE_DIR}/runscript/scripts/logs/'
+
+
 def write_to_file(content, file_path):
     with open(file_path, 'w') as f:
         for line in content:
