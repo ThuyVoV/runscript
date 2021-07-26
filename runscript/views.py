@@ -356,7 +356,7 @@ def script_detail(request, file_id):
 
         # schedule the task with the selected date values
         if request.POST.get("button_task_schedule"):
-            args = [context['file'], arguments, ext]
+            args = [context['file'], arguments]
 
             context['task_dates_original'] = []
             task_dates = []
@@ -389,19 +389,25 @@ def script_detail(request, file_id):
                                   hour=task_hour, minute=task_minute, second=task_second,
                                   replace_existing=True)
 
+                task_args = '```'.join(arguments)
+
                 context['file'].filetask_set.update_or_create(
                     file_task_name=context['file'].script_name,
                     defaults={
                         'next_run': rt.get_next_run_time(context['file'].script_name),
                         'task_year': task_year, 'task_month': task_month, 'task_day': task_day,
                         'task_week': task_week, 'task_day_of_week': task_day_of_week,
-                        'task_hour': task_hour, 'task_minute': task_minute, 'task_second': task_second
+                        'task_hour': task_hour, 'task_minute': task_minute, 'task_second': task_second,
+                        'task_args': task_args
                     }
                 )
 
+                print("this is the argument:", arguments, type(arguments))
+                hehe = context['file'].filetask_set.get(file_task_name=context['file'].script_name)
+                print("this is filetask arg", hehe.task_args, type(hehe.task_args))
+
                 if not os.path.exists(vh.get_logs_dir()):
                     os.makedirs(vh.get_logs_dir())
-
 
         # remove task tied to this script
         if request.POST.get("button_remove_task"):
@@ -455,7 +461,7 @@ def script_confirm_edit(request, file_id):
     upload = UploadFileModel.objects.get(pk=file_id)
     context = {
         'url': url,
-        'script_name': upload,
+        'file': upload,
         'filename': url.split('/')[-1],
     }
     vh.get_perms(request, script_list, context)
@@ -509,14 +515,21 @@ def script_confirm_edit(request, file_id):
                 upload.upload_file = url
                 upload.save()
 
-                # job = scheduler.get_job(job_id=context['script_name'].script_name)
-                # if job is not None:
-                #     job.modify()
-                #
-                #     args = [script_path, arguments, ext]
-                #     # if valid:
-                #     scheduler.add_job(rt.run_task, 'cron', args=args, id=context['script_name'].script_name,
-                #                       minute='3,4,5,6', replace_existing=True)
+                job = scheduler.get_job(job_id=context['file'].script_name)
+                if job is not None:
+                    print("hi this job exists:", job)
+                    task = context['file'].filetask_set.get(file_task_name=context['file'].script_name)
+                    task_args = task.task_args.split('```')
+                    args = [context['file'], task_args]
+                    job.modify(args=args)
+                    print("this is args", task_args)
+                    print("hi this job modify:", job)
+
+
+                    # args = [script_path, arguments, ext]
+                    # # if valid:
+                    # scheduler.add_job(rt.run_task, 'cron', args=args, id=context['file'].script_name,
+                    #                   minute='3,4,5,6', replace_existing=True)
 
                 try:
                     del request.session['new_file_name']
@@ -526,7 +539,7 @@ def script_confirm_edit(request, file_id):
             temp = open(vh.get_temp(), 'r')
             vh.write_to_file(temp, file_path)
             temp.close()
-            script_log = f"{request.user} edited {context['script_name']}"
+            script_log = f"{request.user} edited {context['file']}"
             script_list.scriptlog_set.create(action=script_log, person=request.user)
 
             return redirect("runscript:detail", file_id)

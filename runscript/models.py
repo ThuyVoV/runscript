@@ -33,9 +33,6 @@ class TaskLog(models.Model):
 
     task_output = models.TextField()
 
-    # class Meta:
-    #     ordering = ['time_ran']
-
     def __str__(self):
         return self.task_id + ' - ' + self.time_ran
 
@@ -68,6 +65,8 @@ class FileTask(models.Model):
     task_hour = models.CharField(max_length=100, default='')
     task_minute = models.CharField(max_length=100, default='')
     task_second = models.CharField(max_length=100, default='')
+
+    task_args = models.CharField(max_length=100, default='')
 
     def __str__(self):
         return self.file_task_name + " schedule"

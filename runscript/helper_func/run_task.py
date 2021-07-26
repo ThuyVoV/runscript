@@ -31,14 +31,14 @@ def run_task(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         # ex: Thu Jul 22, 2021 12:55:00 PM
-        current_time = datetime.datetime.now().strftime('%a %b %d, %Y %-I:%M:%S %p')
-        f_current_time = datetime.datetime.now().strftime('%a_%b%d_%Y_%-I%M%S%p')
+        current_time = datetime.datetime.now().strftime('%a %b %d, %Y %I:%M:%S %p')
+        f_current_time = datetime.datetime.now().strftime('%a_%b%d_%Y_%I%M%S%p')
 
         upload_file = args[0]
         script_path = upload_file.upload_file.path
         script_name = upload_file.script_name
         arguments = args[1]
-        ext = args[2]
+        ext = script_path.split('.')[-1]
         log_location = f"{get_logs_dir()}{script_name}_{f_current_time}.txt"
         print('script name:', script_name, 'path', script_path, "@", f_current_time)
 
