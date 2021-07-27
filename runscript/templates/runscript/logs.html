@@ -10,17 +10,17 @@
     </form>
     {% if can_log %}
         {% if logs %}
-{#            {% if logs.has_previous %}#}
-{#                <span><button><a href="?page={{ logs.previous_page_number }}">Previous</a></button></span>#}
-{#            {% else %}#}
-{#                <span><button disabled>Previous</button></span>#}
-{#            {% endif %}#}
-{#            <span>Page {{ logs.number }} of {{ logs.paginator.num_pages }}</span>#}
-{#            {% if logs.has_next %}#}
-{#                <span><button disabled><a href="?page={{ logs.next_page_number }}">Next</a></button></span>#}
-{#            {% else %}#}
-{#                <span><button disabled>Next</button></span>#}
-{#            {% endif %}#}
+            {% if logs.has_previous %}
+                <span><button><a href="?page={{ logs.previous_page_number }}">Previous</a></button></span>
+            {% else %}
+                <span><button disabled>Previous</button></span>
+            {% endif %}
+            <span>Page {{ logs.number }} of {{ logs.paginator.num_pages }}</span>
+            {% if logs.has_next %}
+                <span><button disabled><a href="?page={{ logs.next_page_number }}">Next</a></button></span>
+            {% else %}
+                <span><button disabled>Next</button></span>
+            {% endif %}
 
 {#            <ul class="pagination">#}
 {#                {% if logs.has_previous %}#}
@@ -64,9 +64,14 @@
 {#                {% endif %}#}
 {#            </ul>#}
 
-            <input class="form-control" id="myInput" type="text" placeholder="Search...">
+            <form method="GET">
+                <input class="form-control" name="{{ search_log }}" id="myInput" type="text" placeholder="Search...">
+                <input type="submit" name="button_log_search" value="Search">
+            </form>
 
-            <form action="{% url 'runscript:logs' pk %}" method="GET">
+
+            <form action="{% url 'runscript:logs' pk %}" method="POST">
+                {% csrf_token %}
                 <input type="submit" value="Task Logs" name="button_task_logs"/>
 
                 <input type="submit" value="User Logs" name="button_user_logs"/>

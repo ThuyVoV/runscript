@@ -589,25 +589,44 @@ def logs(request, list_id):
         # 'logs': script_list.scriptlog_set.all()[::-1],
         'logs': script_list.tasklog_set.all()[::-1],
         'pk': list_id,
-        'is_paginated': True
+        'is_paginated': True,
+        'search_log': "search_task"
     }
 
     vh.get_perms(request, script_list, context)
 
-    # context['logs'] = get_log_page(request, script_list.tasklog_set.all()[::-1])
+    context['logs'] = get_log_page(request, script_list.tasklog_set.all()[::-1])
+
+    if request.method == 'POST':
+        if request.POST.get("button_user_logs"):
+            context['logs'] = get_log_page(request, script_list.scriptlog_set.all()[::-1])
+            # context['logs'] = script_list.scriptlog_set.all()[::-1]
+            context['search_log'] = "search_user"
+            return render(request, 'runscript/user_logs.html', context)
 
     if request.method == 'GET':
-        if request.GET.get("button_user_logs"):
-            print("im in here")
-            # context['logs'] = get_log_page(request, script_list.scriptlog_set.all()[::-1])
-            context['logs'] = script_list.scriptlog_set.all()[::-1]
-            return render(request, 'runscript/user_logs.html', context)
+        if request.GET.get("button_log_search"):
+            if request.GET.get("search_task") is not None:
+                print("searching task", request.GET.get("search_task"))
+
+            if request.GET.get("search_user") is not None:
+                print("searching user", request.GET.get("search_user"))
+                # context['logs'] = script_list.scriptlog_set.all()[::-1]
+                context['logs'] = get_log_page(request, script_list.scriptlog_set.all()[::-1])
+                context['search_log'] = "search_user"
+                return render(request, 'runscript/user_logs.html', context)
+
+            elif request.GET.get("search_user") == '':
+                # context['logs'] = script_list.scriptlog_set.all()[::-1]
+                context['logs'] = get_log_page(request, script_list.scriptlog_set.all()[::-1])
+                context['search_log'] = "search_user"
+                return render(request, 'runscript/user_logs.html', context)
 
     return render(request, 'runscript/task_logs.html', context)
 
 
 def get_log_page(request, log):
-    display_amt = 500
+    display_amt = 100
     paginator = Paginator(log, display_amt)
     page_num = request.GET.get("page")
 
