@@ -19,7 +19,8 @@ class ScriptLog(models.Model):
     script_list = models.ForeignKey(ScriptList, on_delete=models.CASCADE, null=True)
     action = models.CharField(max_length=100, default='')
     person = models.CharField(max_length=100, default='')
-    date_added = models.DateTimeField(default=timezone.now)
+    #date_added = models.DateTimeField(default=timezone.now)
+    date_added = models.CharField(max_length=100, default='')
 
     def __str__(self):
         return self.action

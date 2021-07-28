@@ -16,6 +16,7 @@ from .helper_func.decorators import AccessCheck
 from .helper_func import view_helper as vh
 from .helper_func import run_task as rt
 
+import datetime
 import os
 import shlex
 import subprocess
@@ -97,7 +98,8 @@ def view_and_upload(request, list_id):
                 new_file = form.cleaned_data["upload_file"]
                 script_list.uploadfilemodel_set.create(script_name=new_script, upload_file=new_file)
                 script_log = f'{request.user} uploaded {new_script} to {script_list.list_name}'
-                script_list.scriptlog_set.create(action=script_log, person=request.user)
+                current_time = datetime.datetime.now().strftime('%a %b %d, %Y %I:%M:%S %p')
+                script_list.scriptlog_set.create(action=script_log, person=request.user, date_added=current_time)
 
                 return redirect('runscript:view_and_upload', list_id)
             else:
@@ -135,7 +137,8 @@ def manage_user(request, list_id):
                     User.objects.get(username=add_user).user_permissions.add(perm)
 
                     script_log = f'{request.user} added {add_user} to {script_list.list_name}'
-                    script_list.scriptlog_set.create(action=script_log, person=request.user)
+                    current_time = datetime.datetime.now().strftime('%a %b %d, %Y %I:%M:%S %p')
+                    script_list.scriptlog_set.create(action=script_log, person=request.user, date_added=current_time)
                 else:
                     pass
                     # messages.error(request, "User does not exist.")
@@ -156,7 +159,8 @@ def manage_user(request, list_id):
                     # messages.success(request, f'You deleted {del_user} from {script_list.list_name}')
                     script_list.user.remove(User.objects.get(username=del_user).pk)
                     script_log = f'{request.user} deleted {del_user} from {script_list.list_name}'
-                    script_list.scriptlog_set.create(action=script_log, person=request.user)
+                    current_time = datetime.datetime.now().strftime('%a %b %d, %Y %I:%M:%S %p')
+                    script_list.scriptlog_set.create(action=script_log, person=request.user, date_added=current_time)
                 else:
                     pass
                     # messages.error(request, "That user does not exist.")
@@ -273,7 +277,8 @@ def manage_user(request, list_id):
             for m in message:
                 script_log += m + "\n"
 
-            script_list.scriptlog_set.create(person=request.user, action=script_log)
+            current_time = datetime.datetime.now().strftime('%a %b %d, %Y %I:%M:%S %p')
+            script_list.scriptlog_set.create(person=request.user, action=script_log, date_added=current_time)
             # print(script_log)
 
             context['message'] = message
@@ -292,7 +297,8 @@ def manage_user(request, list_id):
                     # messages.success(request, f'You deleted {del_user} from {script_list.list_name}')
                     script_list.user.remove(User.objects.get(username=del_user).pk)
                     script_log = f'{request.user} deleted {del_user} from {script_list.list_name}'
-                    script_list.scriptlog_set.create(action=script_log, person=request.user)
+                    current_time = datetime.datetime.now().strftime('%a %b %d, %Y %I:%M:%S %p')
+                    script_list.scriptlog_set.create(action=script_log, person=request.user, date_added=current_time)
                     context['message'] = f"you delete {del_user}"
                     print("you delete")
             else:
@@ -525,7 +531,6 @@ def script_confirm_edit(request, file_id):
                     print("this is args", task_args)
                     print("hi this job modify:", job)
 
-
                     # args = [script_path, arguments, ext]
                     # # if valid:
                     # scheduler.add_job(rt.run_task, 'cron', args=args, id=context['file'].script_name,
@@ -540,7 +545,8 @@ def script_confirm_edit(request, file_id):
             vh.write_to_file(temp, file_path)
             temp.close()
             script_log = f"{request.user} edited {context['file']}"
-            script_list.scriptlog_set.create(action=script_log, person=request.user)
+            current_time = datetime.datetime.now().strftime('%a %b %d, %Y %I:%M:%S %p')
+            script_list.scriptlog_set.create(action=script_log, person=request.user, date_added=current_time)
 
             return redirect("runscript:detail", file_id)
 
@@ -568,7 +574,8 @@ def script_confirm_delete(request, file_id):
             os.remove(file_path)
             UploadFileModel.objects.get(pk=file_id).delete()
             script_log = f"{request.user} deleted {context['script_name']}"
-            script_list.scriptlog_set.create(action=script_log, person=request.user)
+            current_time = datetime.datetime.now().strftime('%a %b %d, %Y %I:%M:%S %p')
+            script_list.scriptlog_set.create(action=script_log, person=request.user, date_added=current_time)
 
             job = scheduler.get_job(job_id=context['script_name'].script_name)
             if job is not None:
@@ -593,6 +600,12 @@ def logs(request, list_id):
         'search_log': "search_task"
     }
 
+    # request.session['new_script_name'] = request.POST.get("new_script_name")
+    # try:
+    #     del request.session['new_file_name']
+    # except KeyError:
+    #     pass
+
     vh.get_perms(request, script_list, context)
 
     context['logs'] = get_log_page(request, script_list.tasklog_set.all()[::-1])
@@ -608,25 +621,42 @@ def logs(request, list_id):
         if request.GET.get("button_log_search"):
             if request.GET.get("search_task") is not None:
                 print("searching task", request.GET.get("search_task"))
+                search = request.GET.get("search_task")
+                task_log = script_list.tasklog_set
+                filter_log = task_log.filter(task_id__icontains=search) | \
+                             task_log.filter(time_ran__icontains=search)
+                filter_log.order_by('id')
+
+                context['logs'] = get_log_page(request, filter_log[::-1])
 
             if request.GET.get("search_user") is not None:
                 print("searching user", request.GET.get("search_user"))
                 # context['logs'] = script_list.scriptlog_set.all()[::-1]
-                context['logs'] = get_log_page(request, script_list.scriptlog_set.all()[::-1])
+                search = request.GET.get("search_user")
+                user_log = script_list.scriptlog_set
+                filter_log = user_log.filter(action__icontains=search) | \
+                             user_log.filter(person__icontains=search) | \
+                             user_log.filter(date_added__icontains=search)
+
+                # context['logs'] = get_log_page(request, script_list.scriptlog_set.all()[::-1])
+                context['logs'] = get_log_page(request, filter_log[::-1]) or get_log_page(request,
+                                                                                          script_list.scriptlog_set.all()[
+                                                                                          ::-1])
                 context['search_log'] = "search_user"
                 return render(request, 'runscript/user_logs.html', context)
 
-            elif request.GET.get("search_user") == '':
-                # context['logs'] = script_list.scriptlog_set.all()[::-1]
-                context['logs'] = get_log_page(request, script_list.scriptlog_set.all()[::-1])
-                context['search_log'] = "search_user"
-                return render(request, 'runscript/user_logs.html', context)
+            # elif request.GET.get("search_user") == '':
+            #     print("searching user default", request.GET.get("search_user"))
+            #     # context['logs'] = script_list.scriptlog_set.all()[::-1]
+            #     context['logs'] = get_log_page(request, script_list.scriptlog_set.all()[::-1])
+            #     context['search_log'] = "search_user"
+            #     return render(request, 'runscript/user_logs.html', context)
 
     return render(request, 'runscript/task_logs.html', context)
 
 
 def get_log_page(request, log):
-    display_amt = 100
+    display_amt = 50
     paginator = Paginator(log, display_amt)
     page_num = request.GET.get("page")
 
