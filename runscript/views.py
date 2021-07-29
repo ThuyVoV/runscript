@@ -86,6 +86,8 @@ def view_and_upload(request, list_id):
     }
 
     vh.get_perms(request, script_list, context)
+    request.session['log_session'] = "search_task"
+    request.session['log_search_session'] = ''
 
     form = UploadFileForm()
     if request.method == 'POST':
@@ -597,8 +599,17 @@ def logs(request, list_id):
         'logs': script_list.tasklog_set.all()[::-1],
         'pk': list_id,
         'is_paginated': True,
-        'search_log': "search_task"
     }
+
+
+
+    # default
+    if request.session.get('log_session') is None:
+        context['search_log'] = "search_task"
+        request.session['log_session'] = context['search_log']
+        context['header'] = ["Script", "Date Ran", "Output"]
+
+
 
     # request.session['new_script_name'] = request.POST.get("new_script_name")
     # try:
@@ -608,55 +619,51 @@ def logs(request, list_id):
 
     vh.get_perms(request, script_list, context)
 
-    context['logs'] = get_log_page(request, script_list.tasklog_set.all()[::-1])
-
-    if request.method == 'POST':
+    if request.method == "POST":
+        if request.POST.get("button_task_logs"):
+            context['search_log'] = "search_task"
+            request.session['log_session'] = context['search_log']
+            request.session['log_search_session'] = ''
         if request.POST.get("button_user_logs"):
-            context['logs'] = get_log_page(request, script_list.scriptlog_set.all()[::-1])
-            # context['logs'] = script_list.scriptlog_set.all()[::-1]
             context['search_log'] = "search_user"
-            return render(request, 'runscript/user_logs.html', context)
+            request.session['log_session'] = context['search_log']
+            request.session['log_search_session'] = ''
 
-    if request.method == 'GET':
-        if request.GET.get("button_log_search"):
-            if request.GET.get("search_task") is not None:
-                print("searching task", request.GET.get("search_task"))
-                search = request.GET.get("search_task")
-                task_log = script_list.tasklog_set
-                filter_log = task_log.filter(task_id__icontains=search) | \
-                             task_log.filter(time_ran__icontains=search)
-                filter_log.order_by('id')
+    if request.method == "GET":
+        if request.GET.get("button_search_log"):
+            print("input text", request.GET.get("search_log_input"))
+            request.session['log_search_session'] = request.GET.get("search_log_input")
 
-                context['logs'] = get_log_page(request, filter_log[::-1])
+    search = request.session.get("log_search_session")
 
-            if request.GET.get("search_user") is not None:
-                print("searching user", request.GET.get("search_user"))
-                # context['logs'] = script_list.scriptlog_set.all()[::-1]
-                search = request.GET.get("search_user")
-                user_log = script_list.scriptlog_set
-                filter_log = user_log.filter(action__icontains=search) | \
-                             user_log.filter(person__icontains=search) | \
-                             user_log.filter(date_added__icontains=search)
+    if request.session.get('log_session') == 'search_task':
+        task_log = script_list.tasklog_set
+        filter_log = task_log.filter(task_id__icontains=search) | \
+                     task_log.filter(time_ran__icontains=search)
 
-                # context['logs'] = get_log_page(request, script_list.scriptlog_set.all()[::-1])
-                context['logs'] = get_log_page(request, filter_log[::-1]) or get_log_page(request,
-                                                                                          script_list.scriptlog_set.all()[
-                                                                                          ::-1])
-                context['search_log'] = "search_user"
-                return render(request, 'runscript/user_logs.html', context)
+        context['search_log'] = "search_task"
+        context['header'] = ["Script", "Date Ran", "Output"]
+        # context['logs'] = get_log_page(request, script_list.tasklog_set.all()[::-1])
+        context['logs'] = get_log_page(request, filter_log[::-1]) or get_log_page(request, script_list.tasklog_set.all()[::-1])
+    elif request.session.get('log_session') == 'search_user':
+        user_log = script_list.scriptlog_set
+        filter_log = user_log.filter(action__icontains=search) | \
+                     user_log.filter(person__icontains=search) | \
+                     user_log.filter(date_added__icontains=search)
 
-            # elif request.GET.get("search_user") == '':
-            #     print("searching user default", request.GET.get("search_user"))
-            #     # context['logs'] = script_list.scriptlog_set.all()[::-1]
-            #     context['logs'] = get_log_page(request, script_list.scriptlog_set.all()[::-1])
-            #     context['search_log'] = "search_user"
-            #     return render(request, 'runscript/user_logs.html', context)
+        context['search_log'] = "search_user"
+        context['header'] = ["Date", "Person", "Action"]
+        # context['logs'] = get_log_page(request, script_list.scriptlog_set.all()[::-1])
+        context['logs'] = get_log_page(request, filter_log[::-1]) or get_log_page(request, script_list.scriptlog_set.all()[::-1])
 
-    return render(request, 'runscript/task_logs.html', context)
+    context['search_input'] = request.session.get('log_search_session')
+    print(request.session.get('log_search_session'))
+
+    return render(request, 'runscript/logs.html', context)
 
 
 def get_log_page(request, log):
-    display_amt = 50
+    display_amt = 100
     paginator = Paginator(log, display_amt)
     page_num = request.GET.get("page")
 

@@ -22,63 +22,89 @@
                 <span><button disabled>Next</button></span>
             {% endif %}
 
-{#            <ul class="pagination">#}
-{#                {% if logs.has_previous %}#}
-{#                    <li class="page-item">#}
-{#                        <a class=page-link href="?page={{ logs.previous_page_number }}">#}
-{#                            <button>Previous</button>#}
-{#                        </a>#}
-{#                    </li>#}
-{#                {% else %}#}
-{#                    <li class="page-item disabled">#}
-{#                        <a class=page-link href="#">#}
-{#                            <button disabled>Previous</button>#}
-{#                        </a>#}
-{#                    </li>#}
-{#                {% endif %}#}
-{##}
-{#                {% if logs.number != 1 %}#}
-{#                    <li class="page-item">#}
-{#                        <a class=page-link#}
-{#                           href="?page={{ logs.previous_page_number }}">{{ logs.previous_page_number }}</a>#}
-{#                    </li>#}
-{#                {% endif %}#}
-{##}
-{#                <li class="page-item active"><a class=page-link href="#">{{ logs.number }}</a></li>#}
-{##}
-{#                {% if logs.number != logs.paginator.num_pages %}#}
-{#                    <li class="page-item"><a class=page-link#}
-{#                                             href="?page={{ logs.next_page_number }}">{{ logs.next_page_number }}</a>#}
-{#                    </li>#}
-{#                {% endif %}#}
-{##}
-{#                {% if logs.has_next %}#}
-{#                    <li class="page-item"><a class=page-link href="?page={{ logs.next_page_number }}">#}
-{#                        <button>Next</button>#}
-{#                    </a>#}
-{#                    </li>#}
-{#                {% else %}#}
-{#                    <li class="page-item disabled"><a class=page-link href="#">#}
-{#                        <button disabled>Next</button>#}
-{#                    </a></li>#}
-{#                {% endif %}#}
-{#            </ul>#}
-
-            <form method="GET">
-                <input class="form-control" name="{{ search_log }}" id="myInput" type="text" placeholder="Search...">
-                <input type="submit" name="button_log_search" value="Search">
-            </form>
-
-
+            {#            <ul class="pagination">#}
+            {#                {% if logs.has_previous %}#}
+            {#                    <li class="page-item">#}
+            {#                        <a class=page-link href="?page={{ logs.previous_page_number }}">#}
+            {#                            <button>Previous</button>#}
+            {#                        </a>#}
+            {#                    </li>#}
+            {#                {% else %}#}
+            {#                    <li class="page-item disabled">#}
+            {#                        <a class=page-link href="#">#}
+            {#                            <button disabled>Previous</button>#}
+            {#                        </a>#}
+            {#                    </li>#}
+            {#                {% endif %}#}
+            {##}
+            {#                {% if logs.number != 1 %}#}
+            {#                    <li class="page-item">#}
+            {#                        <a class=page-link#}
+            {#                           href="?page={{ logs.previous_page_number }}">{{ logs.previous_page_number }}</a>#}
+            {#                    </li>#}
+            {#                {% endif %}#}
+            {##}
+            {#                <li class="page-item active"><a class=page-link href="#">{{ logs.number }}</a></li>#}
+            {##}
+            {#                {% if logs.number != logs.paginator.num_pages %}#}
+            {#                    <li class="page-item"><a class=page-link#}
+            {#                                             href="?page={{ logs.next_page_number }}">{{ logs.next_page_number }}</a>#}
+            {#                    </li>#}
+            {#                {% endif %}#}
+            {##}
+            {#                {% if logs.has_next %}#}
+            {#                    <li class="page-item"><a class=page-link href="?page={{ logs.next_page_number }}">#}
+            {#                        <button>Next</button>#}
+            {#                    </a>#}
+            {#                    </li>#}
+            {#                {% else %}#}
+            {#                    <li class="page-item disabled"><a class=page-link href="#">#}
+            {#                        <button disabled>Next</button>#}
+            {#                    </a></li>#}
+            {#                {% endif %}#}
+            {#            </ul>#}
+            <br><br>
             <form action="{% url 'runscript:logs' pk %}" method="POST">
                 {% csrf_token %}
                 <input type="submit" value="Task Logs" name="button_task_logs"/>
 
                 <input type="submit" value="User Logs" name="button_user_logs"/>
             </form>
+            <br>
+            <form method="GET">
+                <input class="form-control" name="search_log_input" id="myInput" type="text" placeholder="Search..."
+                        {% if search_input != '' %}value="{{ search_input }}"{% endif %}>
+                <input type="submit" name="button_search_log" value="Search">
+            </form>
 
-            {% block task_logs %}{% endblock task_logs %}
-            {% block user_logs %}{% endblock user_logs %}
+            {#            {% block task_logs %}{% endblock task_logs %}#}
+            {#            {% block user_logs %}{% endblock user_logs %}#}
+            <table class="table table-striped table-bordered">
+                <tr>
+                    <th>{{ header.0 }}</th>
+                    <th>{{ header.1 }}</th>
+                    <th>{{ header.2 }}</th>
+                </tr>
+                <tbody id="myTable">
+                {% for log in logs %}
+                    <tr>
+                        {#                        <td>{{ log.task_id }}</td>#}
+                        {#                        <td>{{ log.time_ran }}</td>#}
+                        {#                        <td>{{ log.id }}</td>#}
+
+                        {% if search_log == "search_task" %}
+                            <td>{{ log.task_id }}</td>
+                            <td>{{ log.time_ran }}</td>
+                            <td>{{ log.id }}</td>
+                        {% elif search_log == "search_user" %}
+                            <td>{{ log.date_added }}</td>
+                            <td>{{ log.person }}</td>
+                            <td>{{ log.action|linebreaks }}</td>
+                        {% endif %}
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
 
         {% else %}
             no logs
