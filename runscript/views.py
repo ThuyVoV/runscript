@@ -9,7 +9,7 @@ from django.utils.decorators import method_decorator
 from django.views.generic.list import ListView
 
 from .forms import UploadFileForm, CreateScriptListForm
-from .models import UploadFileModel, ScriptList, FileTask
+from .models import FileTask, ScriptList, TaskLog, UploadFileModel
 from .scheduler import scheduler
 
 from .helper_func.decorators import AccessCheck
@@ -27,10 +27,8 @@ import sys
 @login_required(login_url='/login/')
 @AccessCheck
 def create_list(request):
-    perm_attributes = [
-        'view', 'add', 'edit', 'run', 'delete',
-        'log', 'manage_user', 'manage_perm'
-    ]
+    perm_attributes = vh.get_perm_attr()
+
     context = {
         'allLists': request.user.user_script_list.all(),
         'my_list': ScriptList.objects.filter(owner=str(request.user)),
@@ -121,10 +119,8 @@ def manage_user(request, list_id):
     }
     vh.get_perms(request, script_list, context)
 
-    perm_attributes = [
-        'view', 'add', 'edit', 'run', 'delete',
-        'log', 'manage_user', 'manage_perm'
-    ]
+    perm_attributes = vh.get_perm_attr()
+
     if request.method == 'POST':
         # ADD USER
         if request.POST.get("button_add_user"):
@@ -601,21 +597,11 @@ def logs(request, list_id):
         'is_paginated': True,
     }
 
-
-
     # default
     if request.session.get('log_session') is None:
         context['search_log'] = "search_task"
         request.session['log_session'] = context['search_log']
         context['header'] = ["Script", "Date Ran", "Output"]
-
-
-
-    # request.session['new_script_name'] = request.POST.get("new_script_name")
-    # try:
-    #     del request.session['new_file_name']
-    # except KeyError:
-    #     pass
 
     vh.get_perms(request, script_list, context)
 
@@ -715,11 +701,19 @@ class Logs(ListView):
         return context
 
 
+@login_required(login_url='/login/')
+@AccessCheck
+def output(request, output_id):
+    context = {
+        'output': TaskLog.objects.get(pk=output_id),
+        'id': output_id
+    }
+
+    return render(request, 'runscript/output.html', context)
+
+
 def ajax_test(request):
-    perm_attributes = [
-        'view', 'add', 'edit', 'run', 'delete',
-        'log', 'manage_user', 'manage_perm'
-    ]
+    perm_attributes = vh.get_perm_attr()
 
     print(request.GET.get("forreal"))
     print(request.GET.get("nextnext"))

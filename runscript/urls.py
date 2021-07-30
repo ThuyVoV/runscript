@@ -13,6 +13,8 @@ urlpatterns = [
     path('<file_id>/change/confirmedit/', views.script_confirm_edit, name='confirm_edit'),
     path('<file_id>/change/confirmdelete/', views.script_confirm_delete, name='confirm_delete'),
     path('list/<list_id>/logs/', views.logs, name='logs'),
+    path('logs/<output_id>/', views.output, name='output'),
+
     #path('list/<int:pk>/logs/', views.Logs.as_view(), name='logs'),
 
     path('haha/', views.ajax_test, name='ajax'),

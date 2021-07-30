@@ -95,11 +95,13 @@
                         {% if search_log == "search_task" %}
                             <td>{{ log.task_id }}</td>
                             <td>{{ log.time_ran }}</td>
-                            <td>{{ log.id }}</td>
+{#                            <td>{{ log.id }}</td>#}
+                            <td><a href="{% url 'runscript:output' log.id%}" target="_blank"> view output log</a></td>
+{#                            <a href="{% url 'runscript:detail' script.id %}" target="_blank">{{ script.script_name }}</a>#}
                         {% elif search_log == "search_user" %}
                             <td>{{ log.date_added }}</td>
                             <td>{{ log.person }}</td>
-                            <td>{{ log.action|linebreaks }}</td>
+                            <td>{{ log.action|linebreaksbr }}</td>
                         {% endif %}
                     </tr>
                 {% endfor %}

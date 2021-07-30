@@ -46,7 +46,7 @@
 
                 <ul id="upload_all">
                     {% for script in script_list.uploadfilemodel_set.all %}
-                        <li><a href="{% url 'runscript:detail' script.id %}">{{ script.script_name }}</a></li>
+                        <li><a href="{% url 'runscript:detail' script.id %}" >{{ script.script_name }}</a></li>
                     {% endfor %}
                 </ul>
             {% else %}

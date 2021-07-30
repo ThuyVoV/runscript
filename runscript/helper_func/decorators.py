@@ -29,7 +29,7 @@ class AccessCheck(object):
         try:
             user = args[0].user
             fun = self.func.__name__
-            need_view = ["script_detail"]
+            need_view = ["script_detail", "output"]
             need_edit = ["script_change", "script_confirm_edit", "script_confirm_delete"]
             need_log = ["logs"]
             need_manage = ["manage_user"]

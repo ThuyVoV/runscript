@@ -1,5 +1,5 @@
 from django.conf import settings
-from runscript.models import UploadFileModel, ScriptList
+from runscript.models import UploadFileModel, ScriptList, TaskLog
 
 
 def get_paths(file_id):
@@ -40,6 +40,9 @@ def get_list(**kwargs):
         return ScriptList.objects.get(pk=script_list_id)
     elif 'pk' in kwargs:
         return ScriptList.objects.get(pk=kwargs['pk'])
+    elif 'output_id' in kwargs:
+        script_list_id = TaskLog.objects.get(pk=int(kwargs['output_id'])).script_list_id
+        return ScriptList.objects.get(pk=script_list_id)
 
 
 def get_perms(request, script_list, context):
@@ -47,3 +50,7 @@ def get_perms(request, script_list, context):
                   'can_manage_perm']
     for c in check_perm:
         context[c] = request.user.has_perm(f"runscript.{script_list.owner}_{script_list.list_name}_{c}")
+
+
+def get_perm_attr():
+    return ['view', 'add', 'edit', 'run', 'delete', 'log', 'manage_user', 'manage_perm']
