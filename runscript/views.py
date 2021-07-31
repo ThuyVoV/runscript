@@ -383,7 +383,7 @@ def script_detail(request, file_id):
                     break
 
             task_year, task_month, task_day, task_week, task_day_of_week, task_hour, task_minute, task_second \
-                = [task_dates[i] for i in range(len(task_dates))]
+                = task_dates
 
             # create tasks in scheduler and filetask in database
             if valid:
