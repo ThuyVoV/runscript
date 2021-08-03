@@ -321,7 +321,7 @@ def manage_user(request, list_id):
 @AccessCheck
 def script_detail(request, file_id):
     script_list = vh.get_list(file_id=file_id)
-    output = []
+    output_text = []
     context = {
         'file': UploadFileModel.objects.get(pk=file_id),
     }
@@ -355,7 +355,7 @@ def script_detail(request, file_id):
 
             with open(vh.get_temp(), 'r') as t:
                 for line in t:
-                    output.append(line)
+                    output_text.append(line)
             t.close()
 
         # schedule the task with the selected date values
@@ -393,7 +393,7 @@ def script_detail(request, file_id):
                                   hour=task_hour, minute=task_minute, second=task_second,
                                   replace_existing=True)
 
-                task_args = '```'.join(arguments)
+                task_args = vh.arg_parse().join(arguments)
 
                 context['file'].filetask_set.update_or_create(
                     file_task_name=context['file'].script_name,
@@ -405,10 +405,6 @@ def script_detail(request, file_id):
                         'task_args': task_args
                     }
                 )
-
-                print("this is the argument:", arguments, type(arguments))
-                hehe = context['file'].filetask_set.get(file_task_name=context['file'].script_name)
-                print("this is filetask arg", hehe.task_args, type(hehe.task_args))
 
                 if not os.path.exists(vh.get_logs_dir()):
                     os.makedirs(vh.get_logs_dir())
@@ -429,7 +425,7 @@ def script_detail(request, file_id):
         context['next_run'] = file_task.next_run
 
     context['fileContent'] = vh.get_file_content(context['file'].upload_file.path)
-    context['output'] = output
+    context['output'] = output_text
 
     return render(request, 'runscript/script_detail.html', context)
 
@@ -523,7 +519,7 @@ def script_confirm_edit(request, file_id):
                 if job is not None:
                     print("hi this job exists:", job)
                     task = context['file'].filetask_set.get(file_task_name=context['file'].script_name)
-                    task_args = task.task_args.split('```')
+                    task_args = task.task_args.split(vh.arg_parse())
                     args = [context['file'], task_args]
                     job.modify(args=args)
                     print("this is args", task_args)
@@ -625,22 +621,24 @@ def logs(request, list_id):
     if request.session.get('log_session') == 'search_task':
         task_log = script_list.tasklog_set
         filter_log = task_log.filter(task_id__icontains=search) | \
-                     task_log.filter(time_ran__icontains=search)
+            task_log.filter(time_ran__icontains=search)
 
         context['search_log'] = "search_task"
         context['header'] = ["Script", "Date Ran", "Output"]
         # context['logs'] = get_log_page(request, script_list.tasklog_set.all()[::-1])
-        context['logs'] = get_log_page(request, filter_log[::-1]) or get_log_page(request, script_list.tasklog_set.all()[::-1])
+        context['logs'] = get_log_page(request, filter_log[::-1]) or \
+            get_log_page(request, script_list.tasklog_set.all()[::-1])
     elif request.session.get('log_session') == 'search_user':
         user_log = script_list.scriptlog_set
         filter_log = user_log.filter(action__icontains=search) | \
-                     user_log.filter(person__icontains=search) | \
-                     user_log.filter(date_added__icontains=search)
+            user_log.filter(person__icontains=search) | \
+            user_log.filter(date_added__icontains=search)
 
         context['search_log'] = "search_user"
         context['header'] = ["Date", "Person", "Action"]
         # context['logs'] = get_log_page(request, script_list.scriptlog_set.all()[::-1])
-        context['logs'] = get_log_page(request, filter_log[::-1]) or get_log_page(request, script_list.scriptlog_set.all()[::-1])
+        context['logs'] = get_log_page(request, filter_log[::-1]) or \
+            get_log_page(request, script_list.scriptlog_set.all()[::-1])
 
     context['search_input'] = request.session.get('log_search_session')
     print(request.session.get('log_search_session'))
@@ -701,6 +699,10 @@ class Logs(ListView):
         return context
 
 
+def asdfasdf(event):
+    return True
+
+
 @login_required(login_url='/login/')
 @AccessCheck
 def output(request, output_id):
@@ -708,6 +710,8 @@ def output(request, output_id):
         'output': TaskLog.objects.get(pk=output_id),
         'id': output_id
     }
+
+    scheduler.remove_listener(asdfasdf)
 
     return render(request, 'runscript/output.html', context)
 

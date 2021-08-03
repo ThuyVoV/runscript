@@ -32,14 +32,14 @@ def run_task(func):
     def wrapper(*args, **kwargs):
         # ex: Thu Jul 22, 2021 12:55:00 PM
         current_time = datetime.datetime.now().strftime('%a %b %d, %Y %I:%M:%S %p')
-        f_current_time = datetime.datetime.now().strftime('%a_%b%d_%Y_%I%M%S%p')
+        f_current_time = datetime.datetime.now().strftime('%Y_%m%d_%H%M%S')#('%a_%b%d_%Y_%I%M%S%p')
 
         upload_file = args[0]
         script_path = upload_file.upload_file.path
         script_name = upload_file.script_name
         arguments = args[1]
         ext = script_path.split('.')[-1]
-        log_location = f"{get_logs_dir()}{script_name}_{f_current_time}.txt"
+        log_location = f"{get_logs_dir()}{f_current_time}_{script_name}.txt"
         print('script name:', script_name, 'path', script_path, "@", f_current_time)
 
         t = open(log_location, 'w')
@@ -74,6 +74,8 @@ def do_task(*args):
         last_run=datetime.datetime.now().strftime('%a %b %d, %Y %-I:%M:%S %p'),
         next_run=get_next_run_time(upload_file.script_name)
     )
+
+    return upload_file.script_name
 
 
 def validate_dates(task_dates, context):

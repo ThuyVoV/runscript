@@ -54,3 +54,7 @@ def get_perms(request, script_list, context):
 
 def get_perm_attr():
     return ['view', 'add', 'edit', 'run', 'delete', 'log', 'manage_user', 'manage_perm']
+
+
+def arg_parse():
+    return '```'
