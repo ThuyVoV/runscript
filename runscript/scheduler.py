@@ -4,6 +4,8 @@ from apscheduler.executors.pool import ThreadPoolExecutor
 from apscheduler.events import EVENT_JOB_EXECUTED, EVENT_JOB_ERROR, EVENT_JOB_MISSED
 from apscheduler.events import JobExecutionEvent
 
+from .helper_func.run_task import task_success_listener, task_missed_listener, task_exception_listener
+
 import logging
 
 # logging.basicConfig()
@@ -28,8 +30,9 @@ def miss_job(event):
     print("more stuff:", event.scheduled_run_time, event.retval, event.exception, event.traceback, event.job_id)
 
 
-
 scheduler = BackgroundScheduler(jobstores=jobStores, executors=executors)
-scheduler.add_listener(job_listener, EVENT_JOB_EXECUTED | EVENT_JOB_ERROR)
-scheduler.add_listener(miss_job, EVENT_JOB_MISSED)
+scheduler.add_listener(task_success_listener, EVENT_JOB_EXECUTED)
+scheduler.add_listener(task_exception_listener, EVENT_JOB_ERROR)
+scheduler.add_listener(task_missed_listener, EVENT_JOB_MISSED)
+
 scheduler.start()

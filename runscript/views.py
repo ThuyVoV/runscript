@@ -699,10 +699,6 @@ class Logs(ListView):
         return context
 
 
-def asdfasdf(event):
-    return True
-
-
 @login_required(login_url='/login/')
 @AccessCheck
 def output(request, output_id):
@@ -710,8 +706,6 @@ def output(request, output_id):
         'output': TaskLog.objects.get(pk=output_id),
         'id': output_id
     }
-
-    scheduler.remove_listener(asdfasdf)
 
     return render(request, 'runscript/output.html', context)
 

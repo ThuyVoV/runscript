@@ -1,30 +1,48 @@
-from django.conf import settings
+from apscheduler.events import EVENT_JOB_EXECUTED, EVENT_JOB_ERROR, EVENT_JOB_MISSED
+from apscheduler.events import JobExecutionEvent
 from django.db import connection
-
 from functools import wraps
 
 from ..models import UploadFileModel, ScriptList
 from .view_helper import get_logs_dir
 
 import datetime
-import os
 import re
 import subprocess
 import sys
 import time
 
 
-def get_next_run_time(name):
-    # get the time of next task run
-    with connection.cursor() as cursor:
-        cursor.execute(f"SELECT next_run_time FROM apscheduler_jobs where id = '{name}'")
-        row = cursor.fetchone()
+# on success, exception, or missed events
+def task_success_listener(event):
+    print("success", event.retval)
 
-    if row is not None:
-        epoch_time = int(row[0])
-        return datetime.datetime.fromtimestamp(epoch_time).strftime('%a %b %d, %Y %-I:%M:%S %p')
 
-    return None
+def task_missed_listener(event):
+    print("missed", event.job_id)
+
+
+def task_exception_listener(event):
+    upload_file = UploadFileModel.objects.get(script_name=event.job_id)
+    current_time = datetime.datetime.now().strftime('%a %b %d, %Y %I:%M:%S %p')
+    f_current_time = datetime.datetime.now().strftime('%Y_%m%d_%H%M%S')  # ('%a_%b%d_%Y_%I%M%S%p')
+
+    script_name = upload_file.script_name
+
+    log_location = f"{get_logs_dir()}{f_current_time}_{script_name}.txt"
+
+    t = open(log_location, 'a')
+    t.write("\n\n"+str(event.exception)+"\n")
+    t.write(event.traceback)
+    t.close()
+    t = open(log_location, 'r')
+    log = t.read()
+    t.close()
+
+    script_list_id = upload_file.script_list_id
+    script_list = ScriptList.objects.get(pk=script_list_id)
+    script_list.tasklog_set.update_or_create(task_id=script_name, time_ran=current_time,
+                                             defaults={'task_output': log})
 
 
 def run_task(func):
@@ -32,7 +50,7 @@ def run_task(func):
     def wrapper(*args, **kwargs):
         # ex: Thu Jul 22, 2021 12:55:00 PM
         current_time = datetime.datetime.now().strftime('%a %b %d, %Y %I:%M:%S %p')
-        f_current_time = datetime.datetime.now().strftime('%Y_%m%d_%H%M%S')#('%a_%b%d_%Y_%I%M%S%p')
+        f_current_time = datetime.datetime.now().strftime('%Y_%m%d_%H%M%S')  # ('%a_%b%d_%Y_%I%M%S%p')
 
         upload_file = args[0]
         script_path = upload_file.upload_file.path
@@ -55,9 +73,10 @@ def run_task(func):
         t.close()
 
         # create a log in the database
-        script_list_id = UploadFileModel.objects.get(pk=upload_file.id).script_list_id
+        # script_list_id = UploadFileModel.objects.get(pk=upload_file.id).script_list_id
+        script_list_id = upload_file.script_list_id
         script_list = ScriptList.objects.get(pk=script_list_id)
-        script_list.tasklog_set.create(task_id=script_name, time_ran=current_time, task_output=log)
+        script_list.tasklog_set.update_or_create(task_id=script_name, time_ran=current_time, task_output=log)
 
         return func(*args, **kwargs)
 
@@ -76,6 +95,19 @@ def do_task(*args):
     )
 
     return upload_file.script_name
+
+
+def get_next_run_time(name):
+    # get the time of next task run
+    with connection.cursor() as cursor:
+        cursor.execute(f"SELECT next_run_time FROM apscheduler_jobs where id = '{name}'")
+        row = cursor.fetchone()
+
+    if row is not None:
+        epoch_time = int(row[0])
+        return datetime.datetime.fromtimestamp(epoch_time).strftime('%a %b %d, %Y %-I:%M:%S %p')
+
+    return None
 
 
 def validate_dates(task_dates, context):
@@ -105,22 +137,21 @@ def validate_dates(task_dates, context):
         task_dates[i] = parse_date(task_dates[i])
 
         if i == 0:  # year
-            context[task] = check_year(task_dates[i], context['task_scheduler'][i])
+            context[task] = check_year(task_dates[i])
         elif i == 1:  # month
-            context[task] = check_date_range(task_dates[i], context['task_scheduler'][i], month_min, month_max)
+            context[task] = check_date_range(task_dates[i], month_min, month_max)
         elif i == 2:  # day
-            context[task] = check_date_range(task_dates[i], context['task_scheduler'][i], day_min, day_max)
+            context[task] = check_date_range(task_dates[i], day_min, day_max)
         elif i == 3:  # week
-            context[task] = check_date_range(task_dates[i], context['task_scheduler'][i], week_min, week_max)
+            context[task] = check_date_range(task_dates[i], week_min, week_max)
         elif i == 4:  # day of week
-            context[task] = check_date_range(task_dates[i], context['task_scheduler'][i], day_of_week_min,
-                                             day_of_week_max)
+            context[task] = check_date_range(task_dates[i], day_of_week_min, day_of_week_max)
         elif i == 5:  # hour
-            context[task] = check_date_range(task_dates[i], context['task_scheduler'][i], hour_min, hour_max)
+            context[task] = check_date_range(task_dates[i], hour_min, hour_max)
         elif i == 6:  # minute
-            context[task] = check_date_range(task_dates[i], context['task_scheduler'][i], minute_min, minute_max)
+            context[task] = check_date_range(task_dates[i], minute_min, minute_max)
         elif i == 7:  # second
-            context[task] = check_date_range(task_dates[i], context['task_scheduler'][i], second_min, second_max)
+            context[task] = check_date_range(task_dates[i], second_min, second_max)
 
 
 def parse_date(date):
@@ -167,10 +198,10 @@ def within_range(value, minVal, maxVal):
     return False
 
 
-def check_date_range(date, task, minVal, maxVal):
+def check_date_range(date, minVal, maxVal):
     # pattern, must be a 1 or 2 digit integer
     # if it is a range of number, the two numbers must be separated by a dash
-    pattern = re.compile(r'^\d{1,2}(?:\-\d{1,2})?$')
+    pattern = re.compile(r'^\d{1,2}(?:-\d{1,2})?$')
     values = date.split(',')
     error = ""
 
@@ -218,7 +249,7 @@ def check_date_range(date, task, minVal, maxVal):
 
 
 # 4 digit year
-def check_year(date, task):
+def check_year(date):
     # must start and end with 4 digits
     pattern = re.compile(r'^\d{4}$')
     match = pattern.findall(date)
