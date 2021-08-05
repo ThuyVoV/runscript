@@ -387,18 +387,26 @@ def script_detail(request, file_id):
 
             # create tasks in scheduler and filetask in database
             if valid:
-                scheduler.add_job(rt.do_task, 'cron', args=args, id=context['file'].script_name,
+                # scheduler.add_job(rt.do_task, 'cron', args=args, id=context['file'].script_name,
+                #                   year=task_year, month=task_month, day=task_day,
+                #                   week=task_week, day_of_week=task_day_of_week,
+                #                   hour=task_hour, minute=task_minute, second=task_second,
+                #                   replace_existing=True)
+
+                scheduler.add_job(rt.run_script, 'cron', args=args, id=context['file'].script_name,
                                   year=task_year, month=task_month, day=task_day,
                                   week=task_week, day_of_week=task_day_of_week,
                                   hour=task_hour, minute=task_minute, second=task_second,
                                   replace_existing=True)
 
+                # save arguments
                 task_args = vh.arg_parse().join(arguments)
 
+                # create job details
                 context['file'].filetask_set.update_or_create(
                     file_task_name=context['file'].script_name,
                     defaults={
-                        'next_run': rt.get_next_run_time(context['file'].script_name),
+                        'next_run': rt.get_next_run_time(context['file'].script_name)[0],
                         'task_year': task_year, 'task_month': task_month, 'task_day': task_day,
                         'task_week': task_week, 'task_day_of_week': task_day_of_week,
                         'task_hour': task_hour, 'task_minute': task_minute, 'task_second': task_second,
@@ -406,6 +414,7 @@ def script_detail(request, file_id):
                     }
                 )
 
+                # make logs folder
                 if not os.path.exists(vh.get_logs_dir()):
                     os.makedirs(vh.get_logs_dir())
 
@@ -517,18 +526,10 @@ def script_confirm_edit(request, file_id):
 
                 job = scheduler.get_job(job_id=context['file'].script_name)
                 if job is not None:
-                    print("hi this job exists:", job)
                     task = context['file'].filetask_set.get(file_task_name=context['file'].script_name)
                     task_args = task.task_args.split(vh.arg_parse())
                     args = [context['file'], task_args]
                     job.modify(args=args)
-                    print("this is args", task_args)
-                    print("hi this job modify:", job)
-
-                    # args = [script_path, arguments, ext]
-                    # # if valid:
-                    # scheduler.add_job(rt.run_task, 'cron', args=args, id=context['file'].script_name,
-                    #                   minute='3,4,5,6', replace_existing=True)
 
                 try:
                     del request.session['new_file_name']
@@ -597,7 +598,7 @@ def logs(request, list_id):
     if request.session.get('log_session') is None:
         context['search_log'] = "search_task"
         request.session['log_session'] = context['search_log']
-        context['header'] = ["Script", "Date Ran", "Output"]
+        context['header'] = ["Script", "Date Ran", "Status"]
 
     vh.get_perms(request, script_list, context)
 

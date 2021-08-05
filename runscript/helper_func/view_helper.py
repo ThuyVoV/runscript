@@ -38,11 +38,11 @@ def get_list(**kwargs):
     elif 'file_id' in kwargs:
         script_list_id = UploadFileModel.objects.get(pk=int(kwargs['file_id'])).script_list_id
         return ScriptList.objects.get(pk=script_list_id)
-    elif 'pk' in kwargs:
-        return ScriptList.objects.get(pk=kwargs['pk'])
-    elif 'output_id' in kwargs:
-        script_list_id = TaskLog.objects.get(pk=int(kwargs['output_id'])).script_list_id
-        return ScriptList.objects.get(pk=script_list_id)
+    # elif 'pk' in kwargs:
+    #     return ScriptList.objects.get(pk=kwargs['pk'])
+    # elif 'output_id' in kwargs:
+    #     script_list_id = TaskLog.objects.get(pk=int(kwargs['output_id'])).script_list_id
+    #     return ScriptList.objects.get(pk=script_list_id)
 
 
 def get_perms(request, script_list, context):
@@ -58,3 +58,7 @@ def get_perm_attr():
 
 def arg_parse():
     return '```'
+
+
+def get_upload_file(job_id):
+    return UploadFileModel.objects.get(script_name=job_id)

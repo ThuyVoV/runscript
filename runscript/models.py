@@ -31,6 +31,7 @@ class TaskLog(models.Model):
 
     task_id = models.CharField(max_length=100, default='')
     time_ran = models.CharField(max_length=100, default='')
+    task_status = models.CharField(max_length=100, default='')
 
     task_output = models.TextField()
 

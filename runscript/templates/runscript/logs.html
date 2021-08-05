@@ -96,7 +96,7 @@
                             <td>{{ log.task_id }}</td>
                             <td>{{ log.time_ran }}</td>
 {#                            <td>{{ log.id }}</td>#}
-                            <td><a href="{% url 'runscript:output' log.id%}" target="_blank"> view output log</a></td>
+                            <td><a href="{% url 'runscript:output' log.id%}" target="_blank">{{ log.task_status }}</a></td>
 {#                            <a href="{% url 'runscript:detail' script.id %}" target="_blank">{{ script.script_name }}</a>#}
                         {% elif search_log == "search_user" %}
                             <td>{{ log.date_added }}</td>
