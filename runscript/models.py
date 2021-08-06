@@ -58,6 +58,8 @@ class FileTask(models.Model):
     file_task_name = models.CharField(max_length=100, default='')
     last_run = models.CharField(max_length=100, default='')
     next_run = models.CharField(max_length=100, default='')
+    file_time = models.CharField(max_length=100, default='')
+    epoch_time = models.CharField(max_length=100, default='')
 
     task_year = models.CharField(max_length=100, default='')
     task_month = models.CharField(max_length=100, default='')

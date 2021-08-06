@@ -403,10 +403,11 @@ def script_detail(request, file_id):
                 task_args = vh.arg_parse().join(arguments)
 
                 # create job details
+                next_run, file_time, epoch_time = rt.get_next_run_time(context['file'].script_name)
                 context['file'].filetask_set.update_or_create(
                     file_task_name=context['file'].script_name,
                     defaults={
-                        'next_run': rt.get_next_run_time(context['file'].script_name)[0],
+                        'next_run': next_run, 'file_time': file_time, 'epoch_time': epoch_time,
                         'task_year': task_year, 'task_month': task_month, 'task_day': task_day,
                         'task_week': task_week, 'task_day_of_week': task_day_of_week,
                         'task_hour': task_hour, 'task_minute': task_minute, 'task_second': task_second,

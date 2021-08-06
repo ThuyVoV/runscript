@@ -14,15 +14,13 @@ import time
 
 
 def run_script(*args):
-    # ex: Thu Jul 22, 2021 12:55:00 PM
-    curr_time, f_curr_time = get_curr_time(), get_f_curr_time()
-
     upload_file = args[0]
     script_path = upload_file.upload_file.path
     script_name = upload_file.script_name
     arguments = args[1]
     ext = script_path.split('.')[-1]
-    log_location = get_log_location(script_name)
+    db_time, file_time, _ = get_next_run_time(script_name)
+    log_location = get_log_location(script_name, file_time)
 
     # writing to log.txt
     t = open(log_location, 'w')
@@ -36,16 +34,21 @@ def run_script(*args):
     t.write("\n\n")
     t.close()
 
-    print('script name:', script_name, 'path', script_path, "@", f_curr_time)
-    return script_name
+    current_time = datetime.datetime.now().strftime('%a %b %d, %Y %I:%M:%S %p')
+    print('ct', current_time, db_time)
+    print('script name:', script_name, 'path', script_path, "@", file_time)
+    return db_time, script_name
 
 
 # on success, exception, or missed events
 def task_success_listener(event):
     print("success", event.retval)
     upload_file = get_upload_file(event.job_id)
-    curr_time, f_curr_time = get_curr_time(), get_f_curr_time()
-    log_location = get_log_location(event.job_id, f_curr_time)
+    db_time, new_file_time, epoch_time = get_next_run_time(upload_file.script_name)
+
+    latest_file_time = upload_file.filetask_set.get(file_task_name=upload_file.script_name).file_time
+
+    log_location = get_log_location(upload_file.script_name, latest_file_time)
 
     t = open(log_location, 'r')
     log = t.read()
@@ -54,12 +57,14 @@ def task_success_listener(event):
     # create a log in the database
     script_list_id = upload_file.script_list_id
     script_list = ScriptList.objects.get(pk=script_list_id)
-    script_list.tasklog_set.update_or_create(task_id=event.job_id, time_ran=curr_time, task_status="SUCCESS", task_output=log)
+    script_list.tasklog_set.update_or_create(task_id=upload_file.script_name, time_ran=event.retval[0], task_status="SUCCESS", task_output=log)
 
     # update the last_run and next_run values
     upload_file.filetask_set.filter(file_task_name=upload_file.script_name).update(
-        last_run=curr_time,
-        next_run=get_next_run_time(upload_file.script_name)[0]
+        last_run=event.retval[0],
+        next_run=get_next_run_time(upload_file.script_name)[0],
+        file_time=new_file_time,
+        epoch_time=epoch_time
     )
 
 
@@ -78,7 +83,7 @@ def task_missed_listener(event):
 
 def task_exception_listener(event):
     upload_file = get_upload_file(event.job_id)
-    curr_time, f_curr_time = get_curr_time(), get_f_curr_time()
+    curr_time, f_curr_time, _ = get_next_run_time(upload_file.script_name)
     log_location = get_log_location(event.job_id, f_curr_time)
 
     # append exception and traceback to the log
@@ -155,12 +160,12 @@ def do_task(*args):
     return upload_file.script_name
 
 
-def get_curr_time():
-    return datetime.datetime.now().strftime('%a %b %d, %Y %I:%M:%S %p')
+def get_time_db_format(epoch):
+    return datetime.datetime.now(epoch).strftime('%a %b %d, %Y %I:%M:%S %p')
 
 
-def get_f_curr_time():
-    return datetime.datetime.now().strftime('%Y_%m%d_%H%M%S')
+def get_time_file_format(epoch):
+    return datetime.datetime.now(epoch).strftime('%Y_%m%d_%H%M%S')
 
 
 def get_next_run_time(name):
@@ -171,13 +176,14 @@ def get_next_run_time(name):
 
     if row is not None:
         epoch_time = int(row[0])
-        return [datetime.datetime.fromtimestamp(epoch_time).strftime('%a %b %d, %Y %-I:%M:%S %p'), epoch_time]
+        return [datetime.datetime.fromtimestamp(epoch_time).strftime('%a %b %d, %Y %-I:%M:%S %p'),
+                datetime.datetime.fromtimestamp(epoch_time).strftime('%Y_%m%d_%H%M%S'), epoch_time]
 
     return None
 
 
-def get_log_location(job_id, log_time=get_f_curr_time()):
-    return f"{get_logs_dir()}{log_time}_{job_id}.txt"
+def get_log_location(script_name, log_time):
+    return f"{get_logs_dir()}{log_time}_{script_name}.txt"
 
 
 def validate_dates(task_dates, context):
