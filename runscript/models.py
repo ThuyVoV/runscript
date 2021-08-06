@@ -36,7 +36,7 @@ class TaskLog(models.Model):
     task_output = models.TextField()
 
     def __str__(self):
-        return self.time_ran + ' - ' + self.task_id
+        return self.time_ran + ' - ' + self.task_id + ' - ' + self.task_status
 
 
 class UploadFileModel(models.Model):

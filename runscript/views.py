@@ -397,7 +397,7 @@ def script_detail(request, file_id):
                                   year=task_year, month=task_month, day=task_day,
                                   week=task_week, day_of_week=task_day_of_week,
                                   hour=task_hour, minute=task_minute, second=task_second,
-                                  replace_existing=True)
+                                  replace_existing=True, coalesce=True)
 
                 # save arguments
                 task_args = vh.arg_parse().join(arguments)

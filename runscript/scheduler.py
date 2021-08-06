@@ -14,7 +14,8 @@ executors = {
 
 scheduler = BackgroundScheduler(jobstores=jobStores, executors=executors)
 scheduler.add_listener(task_success_listener, EVENT_JOB_EXECUTED)
-scheduler.add_listener(task_exception_listener, EVENT_JOB_ERROR)
-scheduler.add_listener(task_missed_listener, EVENT_JOB_MISSED)
+# scheduler.add_listener(task_exception_listener, EVENT_JOB_ERROR)
+scheduler.add_listener(task_missed_listener, EVENT_JOB_MISSED | EVENT_JOB_ERROR)
+scheduler.remove_listener(task_exception_listener)
 
 scheduler.start()
