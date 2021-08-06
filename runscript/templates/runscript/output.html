@@ -1,9 +1,9 @@
 {% extends "runscript/base.html" %}
 {% load static %}
 {% block title %}
-    {{ output.task_id }} {{ output.time_ran }}
-
+    {{ output.time_ran }} {{ output.task_id }}
 {% endblock title %}
 {% block content %}
+    {{ output.output_file_name }} <br><br>
     {{ output.task_output|linebreaksbr }}
 {% endblock content %}
