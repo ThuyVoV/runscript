@@ -1,5 +1,5 @@
 from django.db import connection
-from functools import wraps
+# from functools import wraps
 
 from ..models import ScriptList
 from .view_helper import get_logs_dir, get_upload_file
@@ -8,8 +8,7 @@ import datetime
 import re
 import subprocess
 import sys
-
-from apscheduler.events import EVENT_JOB_EXECUTED, EVENT_JOB_ERROR, EVENT_JOB_MISSED
+import time
 
 
 def run_script(*args):
@@ -20,7 +19,7 @@ def run_script(*args):
     ext = script_path.split('.')[-1]
     db_time, file_time, _ = get_next_run_time(script_name)
     log_location = get_log_location(script_name, file_time)
-    print('WRITING TO', log_location)
+
     # writing to log.txt
     t = open(log_location, 'a')
     if ext == 'sh':
@@ -30,13 +29,11 @@ def run_script(*args):
     t.close()
 
     t = open(log_location, 'a')
-    t.write(f"\n\n----------------------------------------------------"
-            f"------------------------------------------------------------------\n\n")
+    t.write("\n\n")
     t.close()
 
-    current_time = datetime.datetime.now().strftime('%a %b %d, %Y %I:%M:%S %p')
-    epoch = upload_file.filetask_set.get(file_task_name=upload_file.script_name).epoch_time
-    print('DONE WRITING', log_location)
+    # current_time = datetime.datetime.now().strftime('%a %b %d, %Y %I:%M:%S %p')
+    # epoch = upload_file.filetask_set.get(file_task_name=upload_file.script_name).epoch_time
     print('script name:', script_name, 'path', script_path, "@", file_time)
 
     return db_time
@@ -44,22 +41,25 @@ def run_script(*args):
 
 # on success, exception, or missed events
 def task_success_listener(event):
-    print("``````````````SUCCESSSSSSSS", event.retval, '--eventschedl', event.scheduled_run_time)
+    # print("``````````````SUCCESSSSSSSS", event.retval, '--eventschedl', event.scheduled_run_time)
     upload_file = get_upload_file(event.job_id)
     db_time, new_file_time, epoch_time = get_next_run_time(upload_file.script_name)
     latest_file_time = upload_file.filetask_set.get(file_task_name=upload_file.script_name).file_time
     log_location = get_log_location(upload_file.script_name, latest_file_time)
 
     time_ran = event.retval
+
+    t = open(log_location, 'a')
+    t.write(f"----------------------------------------------------"
+            f"{time_ran}----------------------------------------------------\n\n")
+    t.close()
     epoch = upload_file.filetask_set.get(file_task_name=upload_file.script_name).epoch_time
-    print('ASDFASDFASDFAF', time_ran, "--", get_time_db_format(int(epoch)), "--", get_time_file_format(int(epoch)),
-          "\n")
+    print('ASDSDFDFAF', time_ran, "--", get_time_db_format(int(epoch)), "--", get_time_file_format(int(epoch)), "\n")
 
     update_log_database(log_location, upload_file, time_ran, new_file_time, epoch_time, 'SUCCESS')
 
 
-def task_missed_listener(event):
-    print("EVENT WAS MISSED @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n")
+def task_fail_listener(event):
     upload_file = get_upload_file(event.job_id)
     db_time, new_file_time, epoch_time = get_next_run_time(upload_file.script_name)
     latest_file_time = upload_file.filetask_set.get(file_task_name=upload_file.script_name).file_time
@@ -75,30 +75,33 @@ def task_missed_listener(event):
         t.close()
         update_log_database(log_location, upload_file, time_ran, new_file_time, epoch_time, 'ERROR')
     else:
-        print("AHHHHAHHHHHHHHHHHHHHHHHHHHHHHH WRITING TO:", log_location)
+        pattern = '%Y-%m-%d %H:%M:%S%z'
+        f_epoch = int(time.mktime(time.strptime(str(event.scheduled_run_time), pattern)))
+
         t = open(log_location, 'a')
-        t.write(f"missed run {time_ran}: server offline or an unknown error occured\n"
-                f"check the log of the next successful run for this script for missed run")
+        t.write(f"missed run {get_time_db_format(f_epoch)} - {event.job_id}"
+                f"\nserver offline or an unknown error occurred\n"
+                f"check the log of the next successful run for this script for missed run\n\n")
         t.close()
         update_log_database(log_location, upload_file, time_ran, new_file_time, epoch_time, 'MISSED')
 
 
-def task_exception_listener(event):
-    upload_file = get_upload_file(event.job_id)
-    db_time, new_file_time, epoch_time = get_next_run_time(upload_file.script_name)
-    latest_file_time = upload_file.filetask_set.get(file_task_name=upload_file.script_name).file_time
-    log_location = get_log_location(upload_file.script_name, latest_file_time)
-
-    epoch = upload_file.filetask_set.get(file_task_name=upload_file.script_name).epoch_time
-    time_ran = event.retval or get_time_file_format(int(epoch))
-
-    # append exception and traceback to the log
-    t = open(log_location, 'a')
-    t.write(str(event.exception) + "\n")
-    t.write(event.traceback)
-    t.close()
-
-    update_log_database(log_location, upload_file, time_ran, new_file_time, epoch_time, 'ERROR')
+# def task_exception_listener(event):
+#     upload_file = get_upload_file(event.job_id)
+#     db_time, new_file_time, epoch_time = get_next_run_time(upload_file.script_name)
+#     latest_file_time = upload_file.filetask_set.get(file_task_name=upload_file.script_name).file_time
+#     log_location = get_log_location(upload_file.script_name, latest_file_time)
+#
+#     epoch = upload_file.filetask_set.get(file_task_name=upload_file.script_name).epoch_time
+#     time_ran = event.retval or get_time_file_format(int(epoch))
+#
+#     # append exception and traceback to the log
+#     t = open(log_location, 'a')
+#     t.write(str(event.exception) + "\n")
+#     t.write(event.traceback)
+#     t.close()
+#
+#     update_log_database(log_location, upload_file, time_ran, new_file_time, epoch_time, 'ERROR')
 
 
 def update_log_database(log_location, upload_file, time_ran, new_file_time, epoch_time, status):
