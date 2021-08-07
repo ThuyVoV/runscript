@@ -623,7 +623,8 @@ def logs(request, list_id):
     if request.session.get('log_session') == 'search_task':
         task_log = script_list.tasklog_set
         filter_log = task_log.filter(task_id__icontains=search) | \
-            task_log.filter(time_ran__icontains=search)
+            task_log.filter(time_ran__icontains=search) | \
+            task_log.filter(task_status__icontains=search)
 
         context['search_log'] = "search_task"
         context['header'] = ["Script", "Date Ran", "Output"]
