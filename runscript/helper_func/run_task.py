@@ -23,9 +23,14 @@ def run_script(*args):
     # writing to log.txt
     t = open(log_location, 'a')
     if ext == 'sh':
-        subprocess.call(['sh', script_path] + arguments, stdout=t)
+        cmd = subprocess.run(['sh', script_path] + arguments, text=True, stdout=t, stderr=t, check=True)
+        print("sh cmd", cmd)
     elif ext == 'py':
-        subprocess.run([sys.executable, script_path] + arguments, text=True, stdout=t)
+        cmd = subprocess.run([sys.executable, script_path] + arguments, text=True, stdout=t, stderr=t)
+        # print("py cmd", cmd)
+        if cmd.returncode != 0:
+            #t.write(f"\n\nAn error occurred in the script: {script_path}\n")
+            raise
     t.close()
 
     t = open(log_location, 'a')
@@ -50,12 +55,11 @@ def task_success_listener(event):
     time_ran = event.retval
 
     t = open(log_location, 'a')
-    t.write(f"----------------------------------------------------"
-            f"{time_ran}----------------------------------------------------\n\n")
+    t.write(f"-------------------------------------------------"
+            f"{time_ran}-------------------------------------------------\n\n")
     t.close()
     epoch = upload_file.filetask_set.get(file_task_name=upload_file.script_name).epoch_time
-    print('ASDSDFDFAF', time_ran, "--", get_time_db_format(int(epoch)), "--", get_time_file_format(int(epoch)), "\n")
-
+    print('SUCCESS', time_ran, "--", get_time_db_format(int(epoch)), "--", get_time_file_format(int(epoch)), "\n")
     update_log_database(log_location, upload_file, time_ran, new_file_time, epoch_time, 'SUCCESS')
 
 
@@ -67,11 +71,14 @@ def task_fail_listener(event):
 
     epoch = upload_file.filetask_set.get(file_task_name=upload_file.script_name).epoch_time
     time_ran = event.retval or get_time_db_format(int(epoch))
-
+    print("in failed")
     if event.exception:
+        print("in failed exception")
         t = open(log_location, 'a')
         t.write(str(event.exception) + "\n")
         t.write(event.traceback)
+        t.write(f"\n\n-------------------------------------------------"
+                f"{time_ran}-------------------------------------------------\n\n")
         t.close()
         update_log_database(log_location, upload_file, time_ran, new_file_time, epoch_time, 'ERROR')
     else:
@@ -86,22 +93,22 @@ def task_fail_listener(event):
         update_log_database(log_location, upload_file, time_ran, new_file_time, epoch_time, 'MISSED')
 
 
-# def task_exception_listener(event):
-#     upload_file = get_upload_file(event.job_id)
-#     db_time, new_file_time, epoch_time = get_next_run_time(upload_file.script_name)
-#     latest_file_time = upload_file.filetask_set.get(file_task_name=upload_file.script_name).file_time
-#     log_location = get_log_location(upload_file.script_name, latest_file_time)
-#
-#     epoch = upload_file.filetask_set.get(file_task_name=upload_file.script_name).epoch_time
-#     time_ran = event.retval or get_time_file_format(int(epoch))
-#
-#     # append exception and traceback to the log
-#     t = open(log_location, 'a')
-#     t.write(str(event.exception) + "\n")
-#     t.write(event.traceback)
-#     t.close()
-#
-#     update_log_database(log_location, upload_file, time_ran, new_file_time, epoch_time, 'ERROR')
+def task_exception_listener(event):
+    upload_file = get_upload_file(event.job_id)
+    db_time, new_file_time, epoch_time = get_next_run_time(upload_file.script_name)
+    latest_file_time = upload_file.filetask_set.get(file_task_name=upload_file.script_name).file_time
+    log_location = get_log_location(upload_file.script_name, latest_file_time)
+
+    epoch = upload_file.filetask_set.get(file_task_name=upload_file.script_name).epoch_time
+    time_ran = event.retval or get_time_file_format(int(epoch))
+
+    # append exception and traceback to the log
+    t = open(log_location, 'a')
+    t.write(str(event.exception) + "\n")
+    t.write(event.traceback)
+    t.close()
+
+    update_log_database(log_location, upload_file, time_ran, new_file_time, epoch_time, 'ERROR')
 
 
 def update_log_database(log_location, upload_file, time_ran, new_file_time, epoch_time, status):
@@ -113,10 +120,16 @@ def update_log_database(log_location, upload_file, time_ran, new_file_time, epoc
     # create a log in the database
     script_list_id = upload_file.script_list_id
     script_list = ScriptList.objects.get(pk=script_list_id)
-    script_list.tasklog_set.update_or_create(task_id=upload_file.script_name, time_ran=time_ran,
-                                             defaults={
-                                                 'task_status': status, 'output_file_name': log_location,
-                                                 'task_output': log})
+    if status == "ERROR":
+        script_list.tasklog_set.update_or_create(task_id=upload_file.script_name, time_ran=time_ran, task_status=status,
+                                                 defaults={
+                                                     'task_status': status, 'output_file_name': log_location,
+                                                     'task_output': log})
+    else:
+        script_list.tasklog_set.update_or_create(task_id=upload_file.script_name, time_ran=time_ran,
+                                                 defaults={
+                                                     'task_status': status, 'output_file_name': log_location,
+                                                     'task_output': log})
 
     # update the last_run and next_run values
     upload_file.filetask_set.filter(file_task_name=upload_file.script_name).update(

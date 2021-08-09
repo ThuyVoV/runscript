@@ -205,10 +205,8 @@ def manage_user(request, list_id):
             context['selected_user'] = user
 
     if request.is_ajax():
-        print("ajax requests")
         # AJAX SELECT USER
         if request.GET.get("pressed") == 'select':
-            print("select clicked", request.GET.get("pressed"))
 
             users = []
             for u in script_list.user.all():
@@ -234,19 +232,13 @@ def manage_user(request, list_id):
 
         # AJAX CHANGE USER PERMISSIONS
         if request.POST.get('pressed') == 'perm':
-            print("perm clicked", request.POST.get('pressed'))
-            # print("user selected", request.POST.get("selected_user"))
             context['script_list'] = "hah"
-
             user = User.objects.get(username=request.POST.get("selected_user"))
-            # print("user type", type(user), "username", user)
-
             perm_list = request.POST.getlist('perm_list[]')
-            # print("permlist", perm_list)
+
             message = []
             for b, p in zip(perm_list, perm_attributes):
                 perm = Permission.objects.get(codename=f"{script_list.owner}_{script_list.list_name}_can_{p}")
-                print(perm)
                 if b == 'true':
                     if p == "manage_perm" or p == "manage_user":
                         if str(request.user) == script_list.owner:
@@ -254,7 +246,6 @@ def manage_user(request, list_id):
                             # messages.info(request, f"Gave {user} {p} permission")
                             message.append(f"Gave {user} {p} permission")
                         else:
-                            print("you must be owner")
                             message.append(f"Cannot give {user} {p} permission")
                     else:
                         user.user_permissions.add(perm)
@@ -277,15 +268,12 @@ def manage_user(request, list_id):
 
             current_time = datetime.datetime.now().strftime('%a %b %d, %Y %I:%M:%S %p')
             script_list.scriptlog_set.create(person=request.user, action=script_log, date_added=current_time)
-            # print(script_log)
 
             context['message'] = message
             return JsonResponse(context)
 
         # AJAX DELETE USER
         if request.POST.get('pressed') == 'delete':
-            print("del clicked", request.POST.get('pressed'))
-            print("user selected", request.POST.get("selected_user"))
             context['script_list'] = "hah"
             del_user = request.POST.get("selected_user")
 
@@ -298,14 +286,11 @@ def manage_user(request, list_id):
                     current_time = datetime.datetime.now().strftime('%a %b %d, %Y %I:%M:%S %p')
                     script_list.scriptlog_set.create(action=script_log, person=request.user, date_added=current_time)
                     context['message'] = f"you delete {del_user}"
-                    print("you delete")
             else:
-                print("cannot delete")
                 context['message'] = f"you cannot delete {del_user}"
 
             users = []
             for u in script_list.user.all():
-                print(u)
                 if str(u) == script_list.owner or str(u) == str(request.user):
                     continue
                 users.append((str(u)))
@@ -348,9 +333,9 @@ def script_detail(request, file_id):
         if request.POST.get("button_run_script"):
             t = open(vh.get_temp(), 'w')
             if ext == 'sh':
-                subprocess.call(['sh', script_path] + arguments, stdout=t)
+                subprocess.run(['sh', script_path] + arguments, text=True, stdout=t, stderr=t)
             elif ext == 'py':
-                subprocess.run([sys.executable, script_path] + arguments, text=True, stdout=t)
+                subprocess.run([sys.executable, script_path] + arguments, text=True, stdout=t, stderr=t)
             t.close()
 
             with open(vh.get_temp(), 'r') as t:
@@ -615,7 +600,6 @@ def logs(request, list_id):
 
     if request.method == "GET":
         if request.GET.get("button_search_log"):
-            print("input text", request.GET.get("search_log_input"))
             request.session['log_search_session'] = request.GET.get("search_log_input")
 
     search = request.session.get("log_search_session")
@@ -644,7 +628,6 @@ def logs(request, list_id):
             get_log_page(request, script_list.scriptlog_set.all()[::-1])
 
     context['search_input'] = request.session.get('log_search_session')
-    print(request.session.get('log_search_session'))
 
     return render(request, 'runscript/logs.html', context)
 
