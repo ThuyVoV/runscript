@@ -21,7 +21,7 @@ import os
 import shlex
 import subprocess
 import sys
-
+import time
 
 # create an empty lists that will hold scripts
 @login_required(login_url='/login/')
@@ -318,6 +318,7 @@ def script_detail(request, file_id):
         "task_hour", "task_minute", "task_second"
     ]
 
+
     # when they click run script, call the script with argument
     # write the output to a temp file to display it on screen, delete temp file
     if request.method == 'POST':
@@ -331,17 +332,37 @@ def script_detail(request, file_id):
 
         # run script on the page
         if request.POST.get("button_run_script"):
-            t = open(vh.get_temp(), 'w')
+
+            epoch = time.time()
+            db_time = rt.get_time_db_format(epoch)
+            file_time = rt.get_time_file_format(epoch)
+            log_location = rt.get_log_location(context['file'].script_name, file_time)
+            print("log location", log_location)
+
+            #t = open(vh.get_temp(), 'w')
+            t = open(log_location, 'w')
             if ext == 'sh':
-                subprocess.run(['sh', script_path] + arguments, text=True, stdout=t, stderr=t)
+                cmd = subprocess.run(['sh', script_path] + arguments, text=True, stdout=t, stderr=t)
             elif ext == 'py':
-                subprocess.run([sys.executable, script_path] + arguments, text=True, stdout=t, stderr=t)
+                cmd = subprocess.run([sys.executable, script_path] + arguments, text=True, stdout=t, stderr=t)
             t.close()
 
-            with open(vh.get_temp(), 'r') as t:
+            if cmd.returncode == 0:
+                status = "SUCCESS (MANUAL RUN)"
+            else:
+                status = "ERROR (MANUAL RUN)"
+
+            with open(log_location, 'r') as t:
                 for line in t:
                     output_text.append(line)
             t.close()
+
+            t = open(log_location, 'r')
+            log = t.read()
+            t.close()
+
+            script_list.tasklog_set.create(task_id=context['file'].script_name, time_ran=db_time, task_status=status,
+                                           output_file_name=log_location, task_output=log)
 
         # schedule the task with the selected date values
         if request.POST.get("button_task_schedule"):

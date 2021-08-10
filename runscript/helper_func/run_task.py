@@ -93,22 +93,22 @@ def task_fail_listener(event):
         update_log_database(log_location, upload_file, time_ran, new_file_time, epoch_time, 'MISSED')
 
 
-def task_exception_listener(event):
-    upload_file = get_upload_file(event.job_id)
-    db_time, new_file_time, epoch_time = get_next_run_time(upload_file.script_name)
-    latest_file_time = upload_file.filetask_set.get(file_task_name=upload_file.script_name).file_time
-    log_location = get_log_location(upload_file.script_name, latest_file_time)
-
-    epoch = upload_file.filetask_set.get(file_task_name=upload_file.script_name).epoch_time
-    time_ran = event.retval or get_time_file_format(int(epoch))
-
-    # append exception and traceback to the log
-    t = open(log_location, 'a')
-    t.write(str(event.exception) + "\n")
-    t.write(event.traceback)
-    t.close()
-
-    update_log_database(log_location, upload_file, time_ran, new_file_time, epoch_time, 'ERROR')
+# def task_exception_listener(event):
+#     upload_file = get_upload_file(event.job_id)
+#     db_time, new_file_time, epoch_time = get_next_run_time(upload_file.script_name)
+#     latest_file_time = upload_file.filetask_set.get(file_task_name=upload_file.script_name).file_time
+#     log_location = get_log_location(upload_file.script_name, latest_file_time)
+#
+#     epoch = upload_file.filetask_set.get(file_task_name=upload_file.script_name).epoch_time
+#     time_ran = event.retval or get_time_file_format(int(epoch))
+#
+#     # append exception and traceback to the log
+#     t = open(log_location, 'a')
+#     t.write(str(event.exception) + "\n")
+#     t.write(event.traceback)
+#     t.close()
+#
+#     update_log_database(log_location, upload_file, time_ran, new_file_time, epoch_time, 'ERROR')
 
 
 def update_log_database(log_location, upload_file, time_ran, new_file_time, epoch_time, status):

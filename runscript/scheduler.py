@@ -3,7 +3,7 @@ from apscheduler.executors.pool import ThreadPoolExecutor
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.schedulers.background import BackgroundScheduler
 
-from .helper_func.run_task import task_success_listener, task_fail_listener, task_exception_listener
+from .helper_func.run_task import task_success_listener, task_fail_listener
 
 jobStores = {
     'default': SQLAlchemyJobStore(url='sqlite:///db.sqlite3')
