@@ -483,8 +483,6 @@ def script_confirm_edit(request, file_id):
     }
     vh.get_perms(request, script_list, context)
 
-    print('url', url, 'filepath', file_path)
-
     if request.method == 'POST':
         if request.POST.get("button_edit"):
             ext = '.' + context['filename'].split('.')[-1]
