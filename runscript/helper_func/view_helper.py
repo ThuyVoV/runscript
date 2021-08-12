@@ -25,6 +25,10 @@ def get_logs_dir():
     return f'{settings.BASE_DIR}/runscript/scripts/logs/'
 
 
+def get_archive_dir():
+    return f'{settings.BASE_DIR}/runscript/scripts/archive/'
+
+
 def write_to_file(content, file_path):
     with open(file_path, 'w') as f:
         for line in content:

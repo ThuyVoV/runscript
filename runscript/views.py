@@ -19,6 +19,7 @@ from .helper_func import run_task as rt
 import datetime
 import os
 import shlex
+import shutil
 import subprocess
 import sys
 import time
@@ -482,6 +483,8 @@ def script_confirm_edit(request, file_id):
     }
     vh.get_perms(request, script_list, context)
 
+    print('url', url, 'filepath', file_path)
+
     if request.method == 'POST':
         if request.POST.get("button_edit"):
             ext = '.' + context['filename'].split('.')[-1]
@@ -509,6 +512,8 @@ def script_confirm_edit(request, file_id):
             #         pass
 
             if request.session.get('new_file_name') != '':
+                original_path = file_path
+
                 new_file_name = request.session.get('new_file_name')
                 # get original extension and filepath
                 ext = url.split('.')[-1]
@@ -531,6 +536,7 @@ def script_confirm_edit(request, file_id):
                 upload.upload_file = url
                 upload.save()
 
+                # update task
                 job = scheduler.get_job(job_id=context['file'].script_name)
                 if job is not None:
                     task = context['file'].filetask_set.get(file_task_name=context['file'].script_name)
@@ -542,6 +548,12 @@ def script_confirm_edit(request, file_id):
                     del request.session['new_file_name']
                 except KeyError:
                     pass
+
+                # move file to archive
+                if not os.path.exists(vh.get_archive_dir()):
+                    os.makedirs(vh.get_archive_dir())
+
+                shutil.move(original_path, f"{vh.get_archive_dir()}{original_path.split('/')[-1]}")
 
             temp = open(vh.get_temp(), 'r')
             vh.write_to_file(temp, file_path)
