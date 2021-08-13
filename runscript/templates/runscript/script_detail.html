@@ -31,14 +31,23 @@
                         Next run time: {{ next_run }}<br><br>
                     {% endif %}
 
-                    Year: <input type="text" name="task_year" placeholder="4-digit year" value="{{ task_dates_original.0 }}"> {{ task_year.1 }}<br>
-                    Month: <input type="text" name="task_month" placeholder="1-12" value="{{ task_dates_original.1 }}"> {{ task_month.1 }}<br>
-                    Day: <input type="text" name="task_day" placeholder="1-31" value="{{ task_dates_original.2 }}"> {{ task_day.1 }}<br>
-                    Week: <input type="text" name="task_week" placeholder="1-53" value="{{ task_dates_original.3 }}"> {{ task_week.1 }}<br>
-                    Day of Week: <input type="text" name="task_day_of_week" placeholder="0-6 (mon-sun)" value="{{ task_dates_original.4 }}"> {{ task_day_of_week.1 }}<br>
-                    Hour: <input type="text" name="task_hour" placeholder="0-23" value="{{ task_dates_original.5 }}"> {{ task_hour.1 }}<br>
-                    Minute: <input type="text" name="task_minute" placeholder="0-59" value="{{ task_dates_original.6 }}"> {{ task_minute.1 }}<br>
-                    Second: <input type="text" name="task_second" placeholder="0-59" value="{{ task_dates_original.7 }}"> {{ task_second.1 }}<br>
+                        Year: <input type="text" name="task_year" placeholder="{{ placeholder.0 }}" value="{{ task_dates_original.0 }}"> {{ task_year.1 }}<br>
+                        Month: <input type="text" name="task_month" placeholder="{{ placeholder.1 }}" value="{{ task_dates_original.1 }}"> {{ task_month.1 }}<br>
+                        Day: <input type="text" name="task_day" placeholder="{{ placeholder.2 }}" value="{{ task_dates_original.2 }}"> {{ task_day.1 }}<br>
+                        Week: <input type="text" name="task_week" placeholder="{{ placeholder.3 }}" value="{{ task_dates_original.3 }}"> {{ task_week.1 }}<br>
+                        Day of Week: <input type="text" name="task_day_of_week" placeholder="{{ placeholder.4 }}" value="{{ task_dates_original.4 }}"> {{ task_day_of_week.1 }}<br>
+                        Hour: <input type="text" name="task_hour" placeholder="{{ placeholder.5 }}" value="{{ task_dates_original.5 }}"> {{ task_hour.1 }}<br>
+                        Minute: <input type="text" name="task_minute" placeholder="{{ placeholder.6 }}" value="{{ task_dates_original.6 }}"> {{ task_minute.1 }}<br>
+                        Second: <input type="text" name="task_second" placeholder="{{ placeholder.7 }}" value="{{ task_dates_original.7 }}"> {{ task_second.1 }}<br>
+
+{#                    Year: <input type="text" name="task_year" placeholder="4-digit year" value="{{ task_dates_original.0 }}"> {{ task_year.1 }}<br>#}
+{#                    Month: <input type="text" name="task_month" placeholder="1-12" value="{{ task_dates_original.1 }}"> {{ task_month.1 }}<br>#}
+{#                    Day: <input type="text" name="task_day" placeholder="1-31" value="{{ task_dates_original.2 }}"> {{ task_day.1 }}<br>#}
+{#                    Week: <input type="text" name="task_week" placeholder="1-53" value="{{ task_dates_original.3 }}"> {{ task_week.1 }}<br>#}
+{#                    Day of Week: <input type="text" name="task_day_of_week" placeholder="0-6 (mon-sun)" value="{{ task_dates_original.4 }}"> {{ task_day_of_week.1 }}<br>#}
+{#                    Hour: <input type="text" name="task_hour" placeholder="0-23" value="{{ task_dates_original.5 }}"> {{ task_hour.1 }}<br>#}
+{#                    Minute: <input type="text" name="task_minute" placeholder="0-59" value="{{ task_dates_original.6 }}"> {{ task_minute.1 }}<br>#}
+{#                    Second: <input type="text" name="task_second" placeholder="0-59" value="{{ task_dates_original.7 }}"> {{ task_second.1 }}<br>#}
 
 
                     <br>

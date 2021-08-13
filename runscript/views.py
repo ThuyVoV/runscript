@@ -376,6 +376,7 @@ def script_detail(request, file_id):
                 task_dates.append(request.POST.get(t))
 
             print(context['task_dates_original'])
+            # validate_dates() creates context['task_year'], and the rest of inputs (error output display)
             rt.validate_dates(task_dates, context)
             print("task dates", task_dates)
             valid = True
@@ -385,7 +386,7 @@ def script_detail(request, file_id):
 
             for t in context['task_scheduler']:
                 if not context[t][0]:
-                    print("breaking on ", t)
+                    print("breaking on ", t, context[t][1])
                     valid = False
                     break
 
@@ -436,10 +437,19 @@ def script_detail(request, file_id):
             if job is not None:
                 job.remove()
 
+    context['placeholder'] = [
+        '4-digit year', '1-12', '1-31', '1-53', '0-6 (mon-sun)', '0-23', '0-59', '0-59'
+    ]
+
     if FileTask.objects.filter(file_task_name=context['file'].script_name).exists():
-        file_task = context['file'].filetask_set.get(file_task_name=context['file'].script_name)
-        context['last_run'] = file_task.last_run
-        context['next_run'] = file_task.next_run
+        ft = context['file'].filetask_set.get(file_task_name=context['file'].script_name)
+        context['last_run'] = ft.last_run
+        context['next_run'] = ft.next_run
+
+        context['placeholder'] = [
+            ft.task_year, ft.task_month, ft.task_day, ft.task_week, ft.task_day_of_week,
+            ft.task_hour, ft.task_minute, ft.task_second
+        ]
 
     context['fileContent'] = vh.get_file_content(context['file'].upload_file.path)
     context['output'] = output_text
