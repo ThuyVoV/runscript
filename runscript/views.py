@@ -24,6 +24,7 @@ import subprocess
 import sys
 import time
 
+
 # create an empty lists that will hold scripts
 @login_required(login_url='/login/')
 @AccessCheck
@@ -319,7 +320,6 @@ def script_detail(request, file_id):
         "task_hour", "task_minute", "task_second"
     ]
 
-
     # when they click run script, call the script with argument
     # write the output to a temp file to display it on screen, delete temp file
     if request.method == 'POST':
@@ -334,13 +334,17 @@ def script_detail(request, file_id):
         # run script on the page
         if request.POST.get("button_run_script"):
 
+            # make logs folder
+            if not os.path.exists(vh.get_logs_dir()):
+                os.makedirs(vh.get_logs_dir())
+
             epoch = time.time()
             db_time = rt.get_time_db_format(epoch)
             file_time = rt.get_time_file_format(epoch)
             log_location = rt.get_log_location(context['file'].script_name, file_time)
             print("log location", log_location)
 
-            #t = open(vh.get_temp(), 'w')
+            # t = open(vh.get_temp(), 'w')
             t = open(log_location, 'w')
             if ext == 'sh':
                 cmd = subprocess.run(['sh', script_path] + arguments, text=True, stdout=t, stderr=t)
@@ -648,25 +652,25 @@ def logs(request, list_id):
     if request.session.get('log_session') == 'search_task':
         task_log = script_list.tasklog_set
         filter_log = task_log.filter(task_id__icontains=search) | \
-            task_log.filter(time_ran__icontains=search) | \
-            task_log.filter(task_status__icontains=search)
+                     task_log.filter(time_ran__icontains=search) | \
+                     task_log.filter(task_status__icontains=search)
 
         context['search_log'] = "search_task"
         context['header'] = ["Script", "Date Ran", "Output"]
         # context['logs'] = get_log_page(request, script_list.tasklog_set.all()[::-1])
         context['logs'] = get_log_page(request, filter_log[::-1]) or \
-            get_log_page(request, script_list.tasklog_set.all()[::-1])
+                          get_log_page(request, script_list.tasklog_set.all()[::-1])
     elif request.session.get('log_session') == 'search_user':
         user_log = script_list.scriptlog_set
         filter_log = user_log.filter(action__icontains=search) | \
-            user_log.filter(person__icontains=search) | \
-            user_log.filter(date_added__icontains=search)
+                     user_log.filter(person__icontains=search) | \
+                     user_log.filter(date_added__icontains=search)
 
         context['search_log'] = "search_user"
         context['header'] = ["Date", "Person", "Action"]
         # context['logs'] = get_log_page(request, script_list.scriptlog_set.all()[::-1])
         context['logs'] = get_log_page(request, filter_log[::-1]) or \
-            get_log_page(request, script_list.scriptlog_set.all()[::-1])
+                          get_log_page(request, script_list.scriptlog_set.all()[::-1])
 
     context['search_input'] = request.session.get('log_search_session')
 
