@@ -7,6 +7,8 @@ STATICFILES_DIRS = [ <br>
     BASE_DIR / "runscript/templates/runscript/", <br>
 ] <br>
 
+Might need to "import os" in settings.py
+
 In urls.py add: <br>
 path('runscript/', include('runscript.urls')) <br>
 
