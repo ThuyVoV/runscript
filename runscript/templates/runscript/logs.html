@@ -84,6 +84,9 @@
                     <th>{{ header.0 }}</th>
                     <th>{{ header.1 }}</th>
                     <th>{{ header.2 }}</th>
+                    {% if search_log == "search_task_filter" %}
+                        <th>{{ header.3 }}</th>
+                    {% endif %}
                 </tr>
                 <tbody id="myTable">
                 {% for log in logs %}
@@ -93,11 +96,21 @@
                         {#                        <td>{{ log.id }}</td>#}
 
                         {% if search_log == "search_task" %}
+{#                            <td>{{ log.0.task_id }}</td>#}
+{#                            <td>{{ log.0.time_ran }}</td>#}
+{#                            <td>{{ log.0.id }}</td>#}
+{#                            <td><a href="{% url 'runscript:output' log.0.id%}" target="_blank">{{ log.0.task_status }}</a></td>#}
+{#                            <a href="{% url 'runscript:detail' script.id %}" target="_blank">{{ script.0.script_name }}</a>#}
+
                             <td>{{ log.task_id }}</td>
                             <td>{{ log.time_ran }}</td>
-{#                            <td>{{ log.id }}</td>#}
                             <td><a href="{% url 'runscript:output' log.id%}" target="_blank">{{ log.task_status }}</a></td>
-{#                            <a href="{% url 'runscript:detail' script.id %}" target="_blank">{{ script.script_name }}</a>#}
+
+                        {% elif search_log == "search_task_filter" %}
+                            <td>{{ log.0.task_id }} SEARCH TASK FILTER</td>
+                            <td>{{ log.0.time_ran }}</td>
+                            <td><a href="{% url 'runscript:output' log.0.id%}" target="_blank">{{ log.0.task_status }}</a></td>
+
                         {% elif search_log == "search_user" %}
                             <td>{{ log.date_added }}</td>
                             <td>{{ log.person }}</td>

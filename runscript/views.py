@@ -619,20 +619,22 @@ def logs(request, list_id):
     script_list = ScriptList.objects.get(pk=list_id)
 
     context = {
-        # 'logs': script_list.scriptlog_set.all()[::-1],
         'logs': script_list.tasklog_set.all()[::-1],
         'pk': list_id,
         'is_paginated': True,
     }
 
-    # default
+    # default to task logs
     if request.session.get('log_session') is None:
         context['search_log'] = "search_task"
         request.session['log_session'] = context['search_log']
         context['header'] = ["Script", "Date Ran", "Status"]
 
+    # get permissions
     vh.get_perms(request, script_list, context)
 
+    # switch between log views
+    # session between search_task and search_user
     if request.method == "POST":
         if request.POST.get("button_task_logs"):
             context['search_log'] = "search_task"
@@ -643,12 +645,15 @@ def logs(request, list_id):
             request.session['log_session'] = context['search_log']
             request.session['log_search_session'] = ''
 
+    # get search input
     if request.method == "GET":
         if request.GET.get("button_search_log"):
+            # request seession get los ession == search task filter
             request.session['log_search_session'] = request.GET.get("search_log_input")
 
     search = request.session.get("log_search_session")
 
+    # depends on what log they are viewing it will search that log
     if request.session.get('log_session') == 'search_task':
         task_log = script_list.tasklog_set
         filter_log = task_log.filter(task_id__icontains=search) | \
@@ -656,10 +661,16 @@ def logs(request, list_id):
                      task_log.filter(task_status__icontains=search)
 
         context['search_log'] = "search_task"
-        context['header'] = ["Script", "Date Ran", "Output"]
-        # context['logs'] = get_log_page(request, script_list.tasklog_set.all()[::-1])
+        context['header'] = ["Script", "Date Ran", "Output", "Line"]
         context['logs'] = get_log_page(request, filter_log[::-1]) or \
                           get_log_page(request, script_list.tasklog_set.all()[::-1])
+
+        context['pageNum'] = [123,345,6547,678,89,11,201]
+        # context['logs'] = zip(context['logs'], context['pageNum'])
+
+    # elif request session get log session == search task filter
+    # zip the stuff
+
     elif request.session.get('log_session') == 'search_user':
         user_log = script_list.scriptlog_set
         filter_log = user_log.filter(action__icontains=search) | \
@@ -668,7 +679,6 @@ def logs(request, list_id):
 
         context['search_log'] = "search_user"
         context['header'] = ["Date", "Person", "Action"]
-        # context['logs'] = get_log_page(request, script_list.scriptlog_set.all()[::-1])
         context['logs'] = get_log_page(request, filter_log[::-1]) or \
                           get_log_page(request, script_list.scriptlog_set.all()[::-1])
 
@@ -741,14 +751,14 @@ def output(request, output_id):
     return render(request, 'runscript/output.html', context)
 
 
-def ajax_test(request):
-    perm_attributes = vh.get_perm_attr()
-
-    print(request.GET.get("forreal"))
-    print(request.GET.get("nextnext"))
-
-    if request.is_ajax():
-        print("VERY COOL THIS IS AJAX")
-        print("this user was selected:", request.GET.get("selected"))
-
-    return JsonResponse({'notuser': perm_attributes})
+# def ajax_test(request):
+#     perm_attributes = vh.get_perm_attr()
+#
+#     print(request.GET.get("forreal"))
+#     print(request.GET.get("nextnext"))
+#
+#     if request.is_ajax():
+#         print("VERY COOL THIS IS AJAX")
+#         print("this user was selected:", request.GET.get("selected"))
+#
+#     return JsonResponse({'notuser': perm_attributes})

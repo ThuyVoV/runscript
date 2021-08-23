@@ -17,5 +17,5 @@ urlpatterns = [
 
     #path('list/<int:pk>/logs/', views.Logs.as_view(), name='logs'),
 
-    path('haha/', views.ajax_test, name='ajax'),
+    # path('haha/', views.ajax_test, name='ajax'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
