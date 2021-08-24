@@ -88,6 +88,7 @@ def view_and_upload(request, list_id):
     vh.get_perms(request, script_list, context)
     request.session['log_session'] = "search_task"
     request.session['log_search_session'] = ''
+    request.session['log_search_contains_session'] = ''
 
     form = UploadFileForm()
     if request.method == 'POST':
@@ -640,18 +641,29 @@ def logs(request, list_id):
             context['search_log'] = "search_task"
             request.session['log_session'] = context['search_log']
             request.session['log_search_session'] = ''
+            request.session['log_search_contains_session'] = ''
         if request.POST.get("button_user_logs"):
             context['search_log'] = "search_user"
             request.session['log_session'] = context['search_log']
             request.session['log_search_session'] = ''
+            request.session['log_search_contains_session'] = ''
 
     # get search input
     if request.method == "GET":
         if request.GET.get("button_search_log"):
-            # request seession get los ession == search task filter
+
+            if request.session.get('log_session') == 'search_task_contains':
+                request.session['log_session'] = "search_task"
+
             request.session['log_search_session'] = request.GET.get("search_log_input")
+            request.session['log_search_contains_session'] = ''
+        if request.GET.get("button_search_log_contains"):
+            request.session['log_session'] = "search_task_contains"
+            request.session['log_search_session'] = ''
+            request.session['log_search_contains_session'] = request.GET.get("search_log_input_contains")
 
     search = request.session.get("log_search_session")
+    search_contains = request.session.get("log_search_contains_session")
 
     # depends on what log they are viewing it will search that log
     if request.session.get('log_session') == 'search_task':
@@ -660,16 +672,51 @@ def logs(request, list_id):
                      task_log.filter(time_ran__icontains=search) | \
                      task_log.filter(task_status__icontains=search)
 
+        print(type(filter_log))
+
         context['search_log'] = "search_task"
-        context['header'] = ["Script", "Date Ran", "Output", "Line"]
+        context['header'] = ["Script", "Date Ran", "Output"]
         context['logs'] = get_log_page(request, filter_log[::-1]) or \
                           get_log_page(request, script_list.tasklog_set.all()[::-1])
 
-        context['pageNum'] = [123,345,6547,678,89,11,201]
-        # context['logs'] = zip(context['logs'], context['pageNum'])
+    elif request.session.get('log_session') == 'search_task_contains':
+        task_log = script_list.tasklog_set
+        filter_log = task_log.filter(task_output__icontains=search_contains)
 
-    # elif request session get log session == search task filter
-    # zip the stuff
+        context['header'] = ["Script", "Date Ran", "Output", "Line"]
+        context['search_log'] = "search_task_contains"
+
+        page_found = []
+
+        if len(filter_log) == 0:
+            context['search_log'] = "search_task"
+            context['header'] = ["Script", "Date Ran", "Output"]
+            context['logs'] = get_log_page(request, filter_log[::-1]) or \
+                              get_log_page(request, script_list.tasklog_set.all()[::-1])
+
+            context['no_contain'] = "Did not find anything that contain that string"
+
+        else:
+
+            # search for output for word searched
+            for log in filter_log[::-1]:
+                if search_contains != '':
+                    file = open(vh.get_temp(), 'w')
+                    file.write(log.task_output)
+                    file.close()
+
+                    file = open(vh.get_temp(), 'r')
+                    str_find = search_contains
+                    found = ""
+                    for number, line in enumerate(file, 1):
+                        if str_find in line:
+                            found += str(number) + " "
+                else:
+                    found = "None"
+                page_found.append((log, found))
+
+                context['logs'] = get_log_page(request, page_found) #or \
+                              #get_log_page(request, script_list.tasklog_set.all()[::-1])
 
     elif request.session.get('log_session') == 'search_user':
         user_log = script_list.scriptlog_set
@@ -683,6 +730,7 @@ def logs(request, list_id):
                           get_log_page(request, script_list.scriptlog_set.all()[::-1])
 
     context['search_input'] = request.session.get('log_search_session')
+    context['search_input_contains'] = request.session.get('log_search_contains_session')
 
     return render(request, 'runscript/logs.html', context)
 

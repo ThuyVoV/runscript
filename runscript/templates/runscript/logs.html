@@ -71,11 +71,23 @@
                 <input type="submit" value="User Logs" name="button_user_logs"/>
             </form>
             <br>
-            <form method="GET">
-                <input class="form-control" name="search_log_input" id="myInput" type="text" placeholder="Search..."
-                        {% if search_input != '' %}value="{{ search_input }}"{% endif %}>
-                <input type="submit" name="button_search_log" value="Search">
-            </form>
+            <span>
+                <form method="GET">
+                    <input class="form-control" name="search_log_input" id="myInput" type="text" placeholder="Search..."
+                            {% if search_input != '' %}value="{{ search_input }}"{% endif %}>
+                    <input type="submit" name="button_search_log" value="Search">
+                </form>
+
+                {% if search_log == "search_task" or search_log == "search_task_contains" %}
+                    <form method="GET">
+                        <input name="search_log_input_contains" type="text" placeholder="Contains..."
+                               {% if search_input_contains != '' %}value="{{ search_input_contains }}"{% endif %}>
+                        <input type="submit" name="button_search_log_contains" value="Contains">
+                    </form>
+                {% endif %}
+
+                {{ no_contain }}
+            </span>
 
             {#            {% block task_logs %}{% endblock task_logs %}#}
             {#            {% block user_logs %}{% endblock user_logs %}#}
@@ -84,7 +96,7 @@
                     <th>{{ header.0 }}</th>
                     <th>{{ header.1 }}</th>
                     <th>{{ header.2 }}</th>
-                    {% if search_log == "search_task_filter" %}
+                    {% if search_log == "search_task_contains" %}
                         <th>{{ header.3 }}</th>
                     {% endif %}
                 </tr>
@@ -106,10 +118,16 @@
                             <td>{{ log.time_ran }}</td>
                             <td><a href="{% url 'runscript:output' log.id%}" target="_blank">{{ log.task_status }}</a></td>
 
-                        {% elif search_log == "search_task_filter" %}
-                            <td>{{ log.0.task_id }} SEARCH TASK FILTER</td>
+                        {% elif search_log == "search_task_contains" %}
+                            <td>{{ log.0.task_id }}</td>
                             <td>{{ log.0.time_ran }}</td>
                             <td><a href="{% url 'runscript:output' log.0.id%}" target="_blank">{{ log.0.task_status }}</a></td>
+                            <td>{{ log.1 }}</td>
+
+{#                            <td>{{ log.task_id }}</td>#}
+{#                            <td>{{ log.time_ran }}</td>#}
+{#                            <td><a href="{% url 'runscript:output' log.id%}" target="_blank">{{ log.task_status }}</a></td>#}
+{#                            <td>{{ page_found }}</td>#}
 
                         {% elif search_log == "search_user" %}
                             <td>{{ log.date_added }}</td>
