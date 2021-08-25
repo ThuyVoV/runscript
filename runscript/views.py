@@ -114,22 +114,21 @@ def view_and_upload(request, list_id):
             context['placeholder'] = search
             if search != '':
                 found = []
-                print("inside btnSS -- ", search, " -- ", type(search))
                 for upload in script_list.uploadfilemodel_set.all():
                     script = UploadFileModel.objects.get(script_name=upload)
                     script_path = script.upload_file.path
+
+                    # get contents of the script
                     file = open(script_path, 'r')
                     file_content = file.read()
                     file.close()
 
-                    print(f"this is filecontent for {script} \n {file_content}")
-
+                    # if str found, add it to list
                     for line in file_content.splitlines():
                         if search in line:
                             found.append(script)
                             break
                 context['found_script'] = found
-
 
     context['form'] = form
 
