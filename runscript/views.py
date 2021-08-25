@@ -108,6 +108,29 @@ def view_and_upload(request, list_id):
             else:
                 context['dupe'] = "That script name already exists, script names must be unique"
 
+    if request.method == 'GET':
+        if request.GET.get("button_search_scripts"):
+            search = request.GET.get("search_scripts_input")
+            context['placeholder'] = search
+            if search != '':
+                found = []
+                print("inside btnSS -- ", search, " -- ", type(search))
+                for upload in script_list.uploadfilemodel_set.all():
+                    script = UploadFileModel.objects.get(script_name=upload)
+                    script_path = script.upload_file.path
+                    file = open(script_path, 'r')
+                    file_content = file.read()
+                    file.close()
+
+                    print(f"this is filecontent for {script} \n {file_content}")
+
+                    for line in file_content.splitlines():
+                        if search in line:
+                            found.append(script)
+                            break
+                context['found_script'] = found
+
+
     context['form'] = form
 
     return render(request, 'runscript/view_and_upload.html', context)
@@ -651,7 +674,6 @@ def logs(request, list_id):
     # get search input
     if request.method == "GET":
         if request.GET.get("button_search_log"):
-
             if request.session.get('log_session') == 'search_task_contains':
                 request.session['log_session'] = "search_task"
 
@@ -662,6 +684,7 @@ def logs(request, list_id):
             request.session['log_search_session'] = ''
             request.session['log_search_contains_session'] = request.GET.get("search_log_input_contains")
 
+    # get the search inputs
     search = request.session.get("log_search_session")
     search_contains = request.session.get("log_search_contains_session")
 
@@ -671,8 +694,6 @@ def logs(request, list_id):
         filter_log = task_log.filter(task_id__icontains=search) | \
                      task_log.filter(time_ran__icontains=search) | \
                      task_log.filter(task_status__icontains=search)
-
-        print(type(filter_log))
 
         context['search_log'] = "search_task"
         context['header'] = ["Script", "Date Ran", "Output"]
@@ -695,22 +716,19 @@ def logs(request, list_id):
                               get_log_page(request, script_list.tasklog_set.all()[::-1])
 
             context['no_contain'] = "Did not find anything that contain that string"
-
         else:
-
             # search for output for word searched
             for log in filter_log[::-1]:
                 if search_contains != '':
-                    file = open(vh.get_temp(), 'w')
-                    file.write(log.task_output)
-                    file.close()
-
-                    file = open(vh.get_temp(), 'r')
-                    str_find = search_contains
+                    # file = open(vh.get_temp(), 'w')
+                    # file.write(log.task_output)
+                    # file.close()
+                    #
+                    # file = open(vh.get_temp(), 'r')
                     found = ""
-                    for number, line in enumerate(file, 1):
-                        if str_find in line:
-                            found += str(number) + " "
+                    for num_line, text in enumerate(log.task_output.splitlines(), 1):
+                        if search_contains in text:
+                            found += str(num_line) + " "
                 else:
                     found = "None"
                 page_found.append((log, found))
@@ -729,6 +747,7 @@ def logs(request, list_id):
         context['logs'] = get_log_page(request, filter_log[::-1]) or \
                           get_log_page(request, script_list.scriptlog_set.all()[::-1])
 
+    # for placeholders in input tag
     context['search_input'] = request.session.get('log_search_session')
     context['search_input_contains'] = request.session.get('log_search_contains_session')
 

@@ -41,14 +41,26 @@
 
             <!-- List of uploaded files -->
             {% if script_list.uploadfilemodel_set.all %}
-                Files:
-                <input type="text" id="upload_filter" placeholder="Search script">
+                <form method="get">
+                    Files:
+                    <input type="text" id="upload_filter" name="search_scripts_input"
+                           placeholder="{% if placeholder %}{{ placeholder }}{% else %}Search scripts{% endif %}">
+                    <input type="submit" name="button_search_scripts" value="search scripts">
+                </form>
 
-                <ul id="upload_all">
-                    {% for script in script_list.uploadfilemodel_set.all %}
-                        <li><a href="{% url 'runscript:detail' script.id %}" >{{ script.script_name }}</a></li>
-                    {% endfor %}
-                </ul>
+                {% if found_script %}
+                    <ul id="upload_all">
+                        {% for script in found_script %}
+                            <li><a href="{% url 'runscript:detail' script.id %}" >{{ script.script_name }}</a></li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <ul id="upload_all">
+                        {% for script in script_list.uploadfilemodel_set.all %}
+                            <li><a href="{% url 'runscript:detail' script.id %}" >{{ script.script_name }}</a></li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
             {% else %}
                 <p>No files.</p>
             {% endif %}
